@@ -1,7 +1,9 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import 'react-toastify/dist/ReactToastify.css';
 import { ChakraProvider, theme } from '@chakra-ui/react'
 import { Providers } from "./providers.";
+import { ToastContainer } from "react-toastify";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -23,7 +25,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      > <ToastContainer/>
         <Providers>{children}</Providers>
       </body>
     </html>

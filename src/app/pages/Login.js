@@ -17,13 +17,41 @@ import {
 } from "@chakra-ui/react";
 import { useState } from "react";
 import { FaUserAlt, FaLock } from "react-icons/fa";
-
+import api from "../lib/axios";
+import jwt from 'jsonwebtoken';
+const axios = require('axios');
 const CFaUserAlt = chakra(FaUserAlt);
 const CFaLock = chakra(FaLock);
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
     const handleShowClick = () => setShowPassword(!showPassword);
+    const router = useRouter();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const response = await api.post('/user/login', { email, password });
+            localStorage.setItem('authToken', response.data.token);
+            
+            toast("Login Successful!");
+            const decodedUserData = jwt.decode(response.data.token);
+            if(decodedUserData.userType == 'LogisticsCompany'){
+                router.push('/companyHome');
+            }else if(decodedUserData.userType == 'TransportProvider'){
+                router.push('/transportProviderHome'); 
+            }else{
+                router.push('/customerHome');
+            }
+        } catch (err) {
+            toast.error(err.response.data.message);
+            console.error("Login failed:", err);
+        }
+    };
 
     return (
         <Flex
@@ -60,6 +88,8 @@ const Login = () => {
                                     />
                                     <Input
                                         type="email"
+                                        value={email}
+                                        onChange={(e)=>setEmail(e.target.value)}
                                         placeholder="Email address"
                                         bg="gray.700"
                                         borderColor="gray.600"
@@ -82,6 +112,8 @@ const Login = () => {
                                         borderColor="gray.600"
                                         _placeholder={{ color: "gray.400" }}
                                         focusBorderColor="teal.400"
+                                        value={password}
+                                        onChange={(e)=>setPassword(e.target.value)}
                                     />
                                     <InputRightElement width="4.5rem">
                                         <Button h="1.75rem" size="sm" onClick={handleShowClick} colorScheme="teal">
@@ -89,9 +121,9 @@ const Login = () => {
                                         </Button>
                                     </InputRightElement>
                                 </InputGroup>
-                                <FormHelperText textAlign="right" color="gray.400">
+                                {/* <FormHelperText textAlign="right" color="gray.400">
                                     <Link color="teal.300">Forgot password?</Link>
-                                </FormHelperText>
+                                </FormHelperText> */}
                             </FormControl>
                             <Button
                                 borderRadius="md"
@@ -99,6 +131,7 @@ const Login = () => {
                                 variant="solid"
                                 colorScheme="teal"
                                 width="full"
+                                onClick={handleSubmit}
                             >
                                 Login
                             </Button>
@@ -108,7 +141,7 @@ const Login = () => {
             </Stack>
             <Box color="gray.400">
                 New to us?{" "}
-                <Link color="teal.300" href="#">
+                <Link color="teal.300" href="/register">
                     Sign Up
                 </Link>
             </Box>
