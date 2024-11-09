@@ -16,6 +16,7 @@ const Page = () => {
     const [currentLocation, setCurrentLocation] = useState(null);
     const [directionsResponse, setDirectionsResponse] = useState(null);
     const [map, setMap] = useState(/** @type google.maps.Map */(null));
+    const [routes, setRoutes] = useState([{origin:'Colombo',destination:'Kurunegala'},{origin:'Colombo',destination:'Warakapola'},{origin:'Colombo',destination:'Kandy'}]);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: 'AIzaSyAdMVBhGwHwwf875ZJhX59KMkoOC66QsSU',
@@ -42,6 +43,43 @@ const Page = () => {
             );
         }
     }, []);
+    async function calculateRoute(origin, destiantion) {
+        // if (originRef.current.value === '' || destiantionRef.current.value === '') {
+        //     return
+        // }
+        // eslint-disable-next-line no-undef
+        const directionsService = new google.maps.DirectionsService()
+        const results = await directionsService.route({
+            origin: origin,
+            destination: destiantion,
+            // eslint-disable-next-line no-undef
+            travelMode: google.maps.TravelMode.DRIVING,
+        })
+        console.log(results);
+
+
+        // Extract route points
+        // const route = results.routes[0].legs[0].steps.map(step => {
+        //     return step.start_location; // You can also use step.end_location
+        // });
+
+        // Check proximity for a specific location (e.g., origin)
+        // const locationToCheck = { lat: 7.228802,  lng: 80.200791 };
+
+
+        // console.log(isClose ? "Location is close to the route" : "Location is not close to the route");
+    
+
+    setDirectionsResponse(results)
+    // setDistance(results.routes[0].legs[0].distance.text)
+    // setDuration(results.routes[0].legs[0].duration.text)
+}
+
+const onRouteChange = (e) => {
+    console.log(e.target.value);
+    calculateRoute('Colombo', e.target.value);
+    
+}
     return (
         <div>
             {isLoaded ? (
@@ -53,7 +91,7 @@ const Page = () => {
                     w='100vw'
                 ><Select
                     defaultValue="FarmerCustomer"
-
+                    onChange={onRouteChange}
                     borderColor="gray.600"
                     color="gray.600"
                     focusBorderColor="teal.400"
@@ -65,10 +103,14 @@ const Page = () => {
                     position={'absolute'}
                     zIndex={100}
                     width={300}
-                >
-                        <option style={{ color: '#000' }} value="LogisticsCompany">Logistics Company</option>
-                        <option style={{ color: '#000' }} value="TransportProvider">Transport Provider</option>
-                        <option style={{ color: '#000' }} value="FarmerCustomer">Farmer Customer</option>
+                >   {
+                    routes.map((route) => (
+                        <option style={{ color: '#000' }} value={route.destination}>{`${route.origin} - ${route.destination}`}</option>
+                    ))
+                }
+                        {/* <option style={{ color: '#000' }} value="LogisticsCompany">Colombo - Kurunegala</option>
+                        <option style={{ color: '#000' }} value="TransportProvider">Colombo - Kandy</option>
+                        <option style={{ color: '#000' }} value="FarmerCustomer">Colombo - Warakapola</option> */}
                     </Select>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
