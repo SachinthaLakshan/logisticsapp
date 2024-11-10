@@ -1,5 +1,5 @@
 'use client'
-import { Box, Button, Flex, Select } from "@chakra-ui/react";
+import { Box, Button, Flex } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import {
     useJsApiLoader,
@@ -12,14 +12,34 @@ import { useEffect, useRef, useState } from "react";
 import { BounceLoader } from "react-spinners";
 import Loader from "../components/loader/loader";
 import MyComponent from "../components/map";
+import { FaSearch } from "react-icons/fa";
+import {
+
+    Card,
+    CardHeader,
+    CardBody,
+    CardFooter,
+    Heading,
+    Text,
+    List,
+    ListItem,
+    useColorModeValue,
+} from '@chakra-ui/react';
+import api from "../lib/axios";
+import { toast } from "react-toastify";
+import Loader2 from "../components/loader/loader2";
 const Page = () => {
+    const cardBg = useColorModeValue('#3A3D42', '#2F3136');
     const [currentLocation, setCurrentLocation] = useState(null);
     const [directionsResponse, setDirectionsResponse] = useState(null);
     const [map, setMap] = useState(/** @type google.maps.Map */(null));
-    const [routes, setRoutes] = useState([{origin:'Colombo',destination:'Kurunegala'},{origin:'Colombo',destination:'Warakapola'},{origin:'Colombo',destination:'Kandy'}]);
+    const [availableRoutes, setAvailableRoutes] = useState([]);
+    const [searching, setSearching] = useState(false);
+    const [searched, setSearched] = useState(false);
+    const [routes, setRoutes] = useState([{ origin: 'Colombo', destination: 'Kurunegala' }, { origin: 'Colombo', destination: 'Warakapola' }, { origin: 'Colombo', destination: 'Kandy' }]);
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: 'AIzaSyAdMVBhGwHwwf875ZJhX59KMkoOC66QsSU',
+        googleMapsApiKey: process?.env?.GOOGLE_KEY,
         libraries: ['places'],
     })
     const center = { lat: 48.8584, lng: 2.2945 }
@@ -43,7 +63,7 @@ const Page = () => {
             );
         }
     }, []);
-    async function calculateRoute(origin, destiantion) {
+    async function calculateRoute(origin, destiantion, waypoints) {
         // if (originRef.current.value === '' || destiantionRef.current.value === '') {
         //     return
         // }
@@ -52,34 +72,49 @@ const Page = () => {
         const results = await directionsService.route({
             origin: origin,
             destination: destiantion,
-            // eslint-disable-next-line no-undef
+            waypoints: waypoints,
+            // eslint-disable-next-line no-undef,
             travelMode: google.maps.TravelMode.DRIVING,
         })
-        console.log(results);
+       
+        setDirectionsResponse(results)
+     
+    }
+
+    const onClickRoute = (route) => {
+        console.log(route);
+        const waypoints = route.waypoints.map((point)=>{
+            return {location:point}
+        });
+        
+        calculateRoute(route.origin, route.destination,waypoints);
+
+    }
 
 
-        // Extract route points
-        // const route = results.routes[0].legs[0].steps.map(step => {
-        //     return step.start_location; // You can also use step.end_location
-        // });
+    const findAvailableRoutes = async () => {
+        setSearching(true);
+        setSearched(false);
+        try {
+            const response = await api.post('/direction/nearbydirections', { currentLatitude: currentLocation.lat, currentLongitude: currentLocation.lng });
+            if (response) {
+                setSearching(false);
+                if (response.data.nearbyRoute.length > 0) {
+                    setAvailableRoutes(response.data.nearbyRoute);
+                    setSearched(true);
+                } else {
+                    setAvailableRoutes([]);
+                    toast.error('No available routes near you!');
+                }
+                console.log('RESULT::', response.data);
 
-        // Check proximity for a specific location (e.g., origin)
-        // const locationToCheck = { lat: 7.228802,  lng: 80.200791 };
+            }
 
-
-        // console.log(isClose ? "Location is close to the route" : "Location is not close to the route");
-    
-
-    setDirectionsResponse(results)
-    // setDistance(results.routes[0].legs[0].distance.text)
-    // setDuration(results.routes[0].legs[0].duration.text)
-}
-
-const onRouteChange = (e) => {
-    console.log(e.target.value);
-    calculateRoute('Colombo', e.target.value);
-    
-}
+        } catch (err) {
+            toast.error(err.response.data.message);
+            console.error("Login failed:", err);
+        }
+    }
     return (
         <div>
             {isLoaded ? (
@@ -89,29 +124,29 @@ const onRouteChange = (e) => {
                     alignItems='center'
                     h='100vh'
                     w='100vw'
-                ><Select
-                    defaultValue="FarmerCustomer"
-                    onChange={onRouteChange}
-                    borderColor="gray.600"
-                    color="gray.600"
-                    focusBorderColor="teal.400"
-                    backgroundColor={'gray.100'}
-                    borderRadius={10}
-                    margin={15}
-                    marginRight={15}
-                    marginLeft={15}
-                    position={'absolute'}
-                    zIndex={100}
-                    width={300}
-                >   {
-                    routes.map((route) => (
-                        <option style={{ color: '#000' }} value={route.destination}>{`${route.origin} - ${route.destination}`}</option>
-                    ))
-                }
-                        {/* <option style={{ color: '#000' }} value="LogisticsCompany">Colombo - Kurunegala</option>
-                        <option style={{ color: '#000' }} value="TransportProvider">Colombo - Kandy</option>
-                        <option style={{ color: '#000' }} value="FarmerCustomer">Colombo - Warakapola</option> */}
-                    </Select>
+                >
+                    { searched &&
+                        <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
+                            <CardHeader>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md">Available Lorry Routes <Box borderRadius={'50%'} width={5} height={5} backgroundColor={'#91F177'} marginLeft={5}></Box></Heading>
+                            </CardHeader>
+                            <CardBody>
+                                <List spacing={3}>
+                                    {availableRoutes.map((route, index) => (
+                                        <ListItem  display={'flex'} justifyContent={'space-between'} color={'whiteAlpha.900'}>{`${index + 1}. ${route.origin} to ${route.destination}`}<Button onClick={()=>onClickRoute(route)} color={'white'} backgroundColor={'#EA4335'} size={'xs'} >See Directions</Button></ListItem>
+                                    ))}     
+                                </List>
+                            </CardBody>
+                            <CardFooter>
+                                <Text fontSize="sm" color="gray.400">
+                                    Search again for find new routes
+                                </Text>
+                            </CardFooter>
+                        </Card>
+                    }
+                    <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
+                        <FaSearch color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
+                    </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
                         <GoogleMap
@@ -132,7 +167,7 @@ const onRouteChange = (e) => {
                             )}
                         </GoogleMap>
                     </Box>
-
+                    {searching && <Loader2 />}
                 </Flex>
             ) : (
                 <Loader />
