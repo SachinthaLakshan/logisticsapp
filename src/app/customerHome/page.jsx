@@ -39,9 +39,9 @@ const Page = () => {
     const [routes, setRoutes] = useState([{ origin: 'Colombo', destination: 'Kurunegala' }, { origin: 'Colombo', destination: 'Warakapola' }, { origin: 'Colombo', destination: 'Kandy' }]);
 
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: process?.env?.GOOGLE_KEY,
+        googleMapsApiKey: process?.env?.NEXT_PUBLIC_API_KEY,
         libraries: ['places'],
-    })
+    })  
     const center = { lat: 48.8584, lng: 2.2945 }
 
     /** @type React.MutableRefObject<HTMLInputElement> */
