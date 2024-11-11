@@ -52,8 +52,6 @@ const Page = () => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
-                    console.log('>>', position.coords.latitude);
-                    console.log('>>', position.coords.longitude);
                     setCurrentLocation({
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
