@@ -10,7 +10,7 @@ const Page = () => {
     const [waypoints, setWaypoints] = useState([]);
     const [lorryRegNumber, setLorryRegNumber] = useState("DAV-4567");
     const { isLoaded } = useJsApiLoader({
-        googleMapsApiKey: process?.env?.GOOGLE_KEY,
+        googleMapsApiKey: process?.env?.NEXT_PUBLIC_API_KEY,
         libraries: ['places'],
     })
     /** @type React.MutableRefObject<HTMLInputElement> */
