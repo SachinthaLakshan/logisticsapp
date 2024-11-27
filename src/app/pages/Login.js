@@ -36,7 +36,6 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await api.post('/user/login', { email, password });
-            localStorage.setItem('authToken', response.data.token);
             document.cookie = `auth-token=${response.data.token}; path=/`;
             toast("Login Successful!");
             const decodedUserData = jwt.decode(response.data.token);
