@@ -51,7 +51,9 @@ const Register = () => {
                 password:password,
                 email:email,
                 userType:userType,
-                contactNumber:"contactNumber"
+                contactNumber:contactNumber,
+                fullName:fullName,
+                vehicleDetails:fleetDetails
             }
             await api.post('/user/register', data);
             console.log("Registration successful");
