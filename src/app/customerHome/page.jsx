@@ -36,13 +36,15 @@ const Page = () => {
     const [availableRoutes, setAvailableRoutes] = useState([]);
     const [searching, setSearching] = useState(false);
     const [searched, setSearched] = useState(false);
-    const [routes, setRoutes] = useState([{ origin: 'Colombo', destination: 'Kurunegala' }, { origin: 'Colombo', destination: 'Warakapola' }, { origin: 'Colombo', destination: 'Kandy' }]);
+    const [selectedRoute, setSelectedRoute] = useState({});
+    const [isRouteSelected, setIsRouteSelected] = useState(false);
 
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process?.env?.NEXT_PUBLIC_API_KEY,
         libraries: ['places'],
     })  
     const center = { lat: 48.8584, lng: 2.2945 }
+    const lorryLogo = 'https://res.cloudinary.com/dryeiaocv/image/upload/v1732651866/lorry_kq6btk.png';
 
     /** @type React.MutableRefObject<HTMLInputElement> */
     const originRef = useRef()
@@ -84,7 +86,8 @@ const Page = () => {
         const waypoints = route.waypoints.map((point)=>{
             return {location:point}
         });
-        
+        setSelectedRoute(route);  
+        setIsRouteSelected(true);
         calculateRoute(route.origin, route.destination,waypoints);
 
     }
@@ -159,7 +162,7 @@ const Page = () => {
                             }}
                             onLoad={map => setMap(map)}
                         >
-                            <Marker position={currentLocation} />
+                            <Marker  icon={isRouteSelected && lorryLogo} position={isRouteSelected ? selectedRoute.currentLocation : currentLocation} label={{text:isRouteSelected && selectedRoute.lorryRegNumber,className:'marker-label'}} />
                             {directionsResponse && (
                                 <DirectionsRenderer directions={directionsResponse} />
                             )}
