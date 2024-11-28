@@ -20,6 +20,8 @@ import {
     List,
     ListItem,
     useColorModeValue,
+    Image,
+    Grid,
 } from '@chakra-ui/react';
 import api from "../lib/axios";
 import { toast } from "react-toastify";
@@ -173,7 +175,37 @@ const Page = () => {
                     alignItems='center'
                     h='100vh'
                     w='100vw'
-                >
+                >{tripAccepted &&
+                    <Box
+                        p={5}
+                        bg="rgb(5, 5, 5,0.5)"
+                        borderRadius="20px"
+                        boxShadow="lg"
+                        textAlign="left"
+                        width="250px"
+                        position={'absolute'}
+                        top={'10px'}
+                        zIndex={3}
+                        padding={4}
+                    >
+                        <Grid templateColumns="1fr auto" alignItems="center">
+                            <Image
+                                src="lorry.png"
+                                alt="Lorry Logo"
+                                boxSize="50px"
+                            />
+                            <Box>
+                                <Text fontSize="medium" color="white">
+                                    Remaining Capacity
+                                </Text>
+                                <Text fontSize="xl" color="green.400">
+                                    <strong>{availableRoute.vehicle.containerCapacity}%</strong>
+                                </Text>
+                            </Box>
+                        </Grid>
+                    </Box>
+
+                    }
                     {bottomPopUpOpened &&
                         <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
                             <CardHeader>
@@ -182,7 +214,6 @@ const Page = () => {
                             <CardBody>
                                 <List display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={2}>
                                     <ListItem color={'whiteAlpha.900'}>{` ${availableRoute.origin}  to  ${availableRoute.destination}`}</ListItem>
-                                    <ListItem >{tripAccepted &&<Text color={'whiteAlpha.900'} textStyle="6xl">Remaining Capacity : {availableRoute.vehicle.containerCapacity}%</Text>}</ListItem>
                                     <Box display={'flex'} flexDirection={'row'}>
                                         {!tripAccepted && <>
                                             <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onStartTrip()} color={'white'} backgroundColor={'green'} size="md" >Start Trip</Button>
@@ -192,15 +223,15 @@ const Page = () => {
                                         {tripAccepted && <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaBan />} onClick={() => onCancelTrip()} color={'white'} backgroundColor={'red'} size="lg" >Cansel Trip</Button>}
 
                                     </Box>
-                                    
+
                                 </List>
                             </CardBody>
                             {!tripAccepted &&
-                            <CardFooter>
-                                 <Text fontSize="sm" color="gray.400">
-                                    Search again for find new trip
-                                </Text>
-                            </CardFooter>
+                                <CardFooter>
+                                    <Text fontSize="sm" color="gray.400">
+                                        Search again for find new trip
+                                    </Text>
+                                </CardFooter>
                             }
                         </Card>
                     }
