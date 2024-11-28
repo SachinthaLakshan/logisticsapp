@@ -60,8 +60,6 @@ const Page = () => {
             );
         }
         getLogedUser();
-
-
     }, []);
 
     const getLogedUser = async () => {
@@ -107,6 +105,7 @@ const Page = () => {
                     calculateRoute(currentLocation, availableRoute.destination, waypoints);
                     setTripAccepted(true);
                     setBottomPopUpOpened(false);
+                    updateDriverCurrentLocation();
                     toast.success(response.data.message);
                 }
             }
@@ -136,6 +135,7 @@ const Page = () => {
     const findAvailableRoutes = async () => {
         if (tripAccepted) {
             setBottomPopUpOpened(true);
+            updateDriverCurrentLocation();
         } else {
             try {
                 const response = await api.get(`direction/findtrip/${user.vehicleDetails}`);
@@ -152,6 +152,7 @@ const Page = () => {
                             calculateRoute(currentLocation, response.data.data.destination, waypoints);
                         }
                         setBottomPopUpOpened(true);
+                        updateDriverCurrentLocation();
                     } else {
                         toast.error(response.data.message);
                     }
@@ -166,6 +167,15 @@ const Page = () => {
     const onClosePopup = () => {
         setBottomPopUpOpened(!bottomPopUpOpened);
     }
+
+    const updateDriverCurrentLocation = async () => {
+        try {
+             await api.put(`direction/updatecurrentlocation`, { directionId:availableRoute._id , lat:currentLocation.lat, lng: currentLocation.lng });
+        } catch (err) {
+            console.log("Error:", err);
+        }
+    }
+
     return (
         <div>
             {isLoaded ? (
