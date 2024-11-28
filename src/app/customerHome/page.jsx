@@ -76,7 +76,7 @@ const Page = () => {
             // eslint-disable-next-line no-undef,
             travelMode: google.maps.TravelMode.DRIVING,
         })
-       
+        setCurrentLocation(selectedRoute.currentLocation);
         setDirectionsResponse(results)
      
     }
