@@ -15,7 +15,7 @@ import {
     FormHelperText,
     InputRightElement
 } from "@chakra-ui/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaUserAlt, FaLock } from "react-icons/fa";
 import api from "../lib/axios";
 import jwt from 'jsonwebtoken';
@@ -24,15 +24,40 @@ const CFaUserAlt = chakra(FaUserAlt);
 const CFaLock = chakra(FaLock);
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
+import Loader2 from "../components/loader/loader2";
+import { useCookies } from "react-cookie";
 
 const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(true);
     const handleShowClick = () => setShowPassword(!showPassword);
     const router = useRouter();
+    const [cookies] = useCookies(['auth-token']);
+
+    useEffect(() => {
+        const token = cookies['auth-token'];
+        if(token){
+            const decodedUserData = jwt.decode(token);
+            if(decodedUserData.userType == 'LogisticsCompany'){
+                router.push('/companyHome');
+                setIsLoading(false);
+            }else if(decodedUserData.userType == 'TransportProvider'){
+                router.push('/transportProviderHome');
+                setIsLoading(false) 
+            }else{
+                router.push('/customerHome');
+                setIsLoading(false)
+            }
+        }else{
+            setIsLoading(false);
+        }
+        
+    },[]);
 
     const handleSubmit = async (e) => {
+        setIsLoading(true);
         e.preventDefault();
         try {
             const response = await api.post('/user/login', { email, password });
@@ -46,9 +71,11 @@ const Login = () => {
             }else{
                 router.push('/customerHome');
             }
+            setIsLoading(false);
         } catch (err) {
-            toast.error(err.response.data.message);
+            toast.error(err.message);
             console.error("Login failed:", err);
+            setIsLoading(false);
         }
     };
 
@@ -62,6 +89,7 @@ const Login = () => {
             alignItems="center"
             color="whiteAlpha.900"
         >
+            {!isLoading && <>
             <Stack
                 flexDir="column"
                 mb="2"
@@ -144,6 +172,8 @@ const Login = () => {
                     Sign Up
                 </Link>
             </Box>
+            </>}
+            {isLoading && <Loader2 />}
         </Flex>
     );
 };
