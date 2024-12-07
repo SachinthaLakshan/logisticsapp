@@ -70,7 +70,7 @@ const Page = () => {
         try {
             const response = await api.get(`user/getuser/${decodedUserData.userId}`);
             if (response) {
-                if (response.data) {
+                if (response.data) {                 
                     setUser(response.data.data)
                 }
             }
@@ -185,7 +185,7 @@ const Page = () => {
                     alignItems='center'
                     h='100vh'
                     w='100vw'
-                >{tripAccepted &&
+                >{ 
                     <Box
                         p={5}
                         bg="rgb(5, 5, 5,0.5)"
@@ -209,7 +209,7 @@ const Page = () => {
                                     Remaining Capacity
                                 </Text>
                                 <Text fontSize="xl" color="green.400">
-                                    <strong>{availableRoute.vehicle.containerCapacity}%</strong>
+                                    <strong>{user?.vehicleDetails?.containerCapacity}%</strong>
                                 </Text>
                             </Box>
                         </Grid>
