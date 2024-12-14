@@ -1,12 +1,26 @@
 "use client"
-import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, TableCaption } from '@chakra-ui/react';
+import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, TableCaption,useDisclosure,
+    Modal,
+    ModalOverlay,
+    ModalContent,
+    ModalHeader,
+    ModalFooter,
+    ModalBody,
+    ModalCloseButton,
+    FormControl,
+    FormLabel,
+    Select, } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
 import Loader3 from '../components/loader/loader3';
 import api from '../lib/axios';
 
 const AdminRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
+    const [vehicles, setVehicles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedVehicle, setSelectedVehicle] = useState('');
+    const { isOpen, onOpen, onClose } = useDisclosure();
+
     useEffect(() => {
         getAllRoutes();
     },[]);
@@ -32,6 +46,26 @@ const AdminRoutesPage = () => {
             if (response) {
                 if (response.data) {
                     setRoutes(response.data);
+                    getAllVehicles();
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    };
+
+    const handleAssign = () => {
+        // Logic to add a new vehicle
+        console.log('Add Vehicle');
+    };
+
+    const getAllVehicles = async () => {
+        setIsLoading(true);
+        try {
+            const response = await api.get(`admin/getallvehicles`);
+            if (response) {
+                if (response.data) {
+                    setVehicles(response.data);
                     setIsLoading(false);
                 }
             }
@@ -77,10 +111,10 @@ const AdminRoutesPage = () => {
                             <Td>
                                 <Button 
                                     colorScheme="yellow" 
-                                    onClick={() => handleEditVehicle(route._id)} 
+                                    onClick={onOpen}
                                     mr={2}
                                 >
-                                    View on Map
+                                    Assign Vehicle
                                 </Button>
                                 <Button 
                                     colorScheme="red" 
@@ -93,6 +127,38 @@ const AdminRoutesPage = () => {
                     ))}
                 </Tbody>
             </Table>
+            <Modal isOpen={isOpen} onClose={onClose}>
+                <ModalOverlay />
+                <ModalContent>
+                    <ModalHeader>Assign Vehicle</ModalHeader>
+                    <ModalCloseButton />
+                    <ModalBody>
+                        <FormControl>
+                            <FormLabel>Select Vehicle</FormLabel>
+                            <Select
+                                placeholder="Select vehicle"
+                                value={selectedVehicle}
+                                onChange={(e) => setSelectedVehicle(e.target.value)}
+                            >
+                                {vehicles.map((vehicle) => (
+                                    <option key={vehicle._id} value={vehicle._id}>
+                                        {vehicle.licensePlateNumber}
+                                    </option>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    </ModalBody>
+
+                    <ModalFooter>
+                        <Button colorScheme="blue" mr={3} onClick={handleAssign}>
+                            Assign to Route
+                        </Button>
+                        <Button variant="ghost" onClick={onClose}>
+                            Cancel
+                        </Button>
+                    </ModalFooter>
+                </ModalContent>
+            </Modal>
             {isLoading && <Loader3/>}
         </Box>
     );

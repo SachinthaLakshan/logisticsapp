@@ -4,7 +4,7 @@ import { use, useEffect } from 'react';
 import { useCookies } from 'react-cookie';
 import { FaTachometerAlt, FaBusAlt , FaUsers,FaMapMarkedAlt  } from 'react-icons/fa'; // Importing icons
 
-const AdminSidebar = () => {
+const AdminSidebar = ({logedUser}) => {
     const router = useRouter();
     const pathname = usePathname();
     const [cookie, setCookie, removeCookie] = useCookies();
@@ -32,8 +32,8 @@ const AdminSidebar = () => {
         >
             <Box padding={4} textAlign="center">
                 <Avatar name={'user name'} src={'/user.png'} size="lg" mb={2} />
-                <Text fontWeight="bold">@{'user name'}</Text>
-                <Text fontSize="sm" color="gray.400">{'admin@gmail.com'}</Text>
+                <Text fontWeight="bold">@{logedUser && logedUser.fullName}</Text>
+                <Text fontSize="sm" color="gray.400">{logedUser && logedUser.email}</Text>
                 <Button 
                     mt={2} 
                     colorScheme="teal" 
