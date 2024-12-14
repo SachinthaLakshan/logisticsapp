@@ -28,6 +28,7 @@ import { toast } from "react-toastify";
 import Loader2 from "../components/loader/loader2";
 import { useCookies } from "react-cookie";
 import jwt from 'jsonwebtoken';
+import { useRouter } from "next/navigation";
 
 const Page = () => {
     const cardBg = useColorModeValue('#3A3D42', '#2F3136');
@@ -43,7 +44,9 @@ const Page = () => {
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process?.env?.NEXT_PUBLIC_API_KEY,
         libraries: ['places'],
-    })
+    });
+    const router = useRouter();
+    const [cookie, setCookie, removeCookie] = useCookies();
     const center = { lat: 48.8584, lng: 2.2945 }
     const lorryLogo = 'https://res.cloudinary.com/dryeiaocv/image/upload/v1732651866/lorry_kq6btk.png';
 
@@ -175,9 +178,25 @@ const Page = () => {
             console.log("Error:", err);
         }
     }
+    const handleLogout = () => {
+        removeCookie('auth-token', { path: '/', domain: 'localhost' });
+        router.push('/login');
+    };
 
     return (
         <div>
+            <Button 
+                    
+                    colorScheme="teal" 
+                    size="sm"
+                    position={'absolute'}
+                    top={0}
+                    left={0}
+                    zIndex={5}
+                    onClick={handleLogout}
+                >
+                    Logout
+                </Button>
             {isLoaded ? (
                 <Flex
                     position='relative'
