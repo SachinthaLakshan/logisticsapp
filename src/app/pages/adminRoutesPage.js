@@ -25,7 +25,6 @@ import Loader3 from '../components/loader/loader3';
 import api from '../lib/axios';
 import ModalComponent from '../components/Modal/Modal';
 import { Autocomplete, useJsApiLoader } from '@react-google-maps/api';
-import AddNewRoute from '../components/AddNewRoute/AddNewRoute';
 import { FaMapPin, FaRegTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
