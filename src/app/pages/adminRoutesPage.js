@@ -296,6 +296,7 @@ const AdminRoutesPage = () => {
                     <Tr>
                         <Th>Origin</Th>
                         <Th>Destination</Th>
+                        <Th>Assigned Vehicle</Th>
                         <Th>Driver Confirmed</Th>
                         <Th>Vehicle On The Way</Th>
                     </Tr>
@@ -305,6 +306,7 @@ const AdminRoutesPage = () => {
                         <Tr key={route._id}>
                             <Td>{route.origin}</Td>
                             <Td>{route.destination}</Td>
+                            <Td>{route.vehicle? route?.vehicle?.licensePlateNumber:'-'}</Td>
                             <Td>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
                             <Td>{route.onTheWay ? 'Yes' : 'No'}</Td>
                             <Td>{route.color}</Td>
