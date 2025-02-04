@@ -18,7 +18,8 @@ import {
     Text,
     CardHeader,
     Flex,
-    Center
+    Center,
+    Tooltip
 } from '@chakra-ui/react';
 import { useEffect, useRef, useState } from 'react';
 import Loader3 from '../components/loader/loader3';
@@ -30,6 +31,7 @@ import { toast } from 'react-toastify';
 
 const AdminRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
+    const [selectedRoute, setSelectedRoute] = useState(null);
     const [vehicles, setVehicles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedVehicle, setSelectedVehicle] = useState('');
@@ -55,16 +57,26 @@ const AdminRoutesPage = () => {
     /** @type React.MutableRefObject<HTMLInputElement> */
     const waypointRef = useRef()
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
-    const { isOpen: addRouteModalIsOpen, onOpen: addRouteModalOnOpen, onClose: addRouteModalOnClose } = useDisclosure();
 
     useEffect(() => {
         getAllRoutes();
     }, []);
 
-    const handleDeleteVehicle = (id) => {
+    const handleDeleteRoute = async (id) => {
         // Logic to delete vehicle with given id
-        setRoutes(routes.filter(vehicle => vehicle.id !== id));
-        console.log('Delete Vehicle', id);
+        setIsLoading(true);
+        try {
+            const response = await api.delete(`direction/delete/${id}`);
+            if (response) {
+                if (response.data) {
+                    setIsLoading(false);
+                    toast.success(response.data.message);
+                    getAllRoutes();
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
     };
 
     const getAllRoutes = async () => {
@@ -81,9 +93,27 @@ const AdminRoutesPage = () => {
         }
     };
 
-    const handleAssign = () => {
-        // Logic to add a new vehicle
-        console.log('Add Vehicle');
+    const handleAssign = async () => {
+        setIsLoading(true);
+
+        try {
+            const data = {
+                vehicleId: selectedVehicle,
+                directionId: selectedRoute._id
+            }
+            const response = await api.put(`admin/assignvehicletoroute`, data);
+            if (response) {
+                console.log(response);
+                setIsLoading(false);
+                toast.success(response.data.message);
+                getAllRoutes();
+                assignVehicleModalOnClose();
+            }
+        } catch (error) {
+            setIsLoading(false);
+            toast.error(error.response.data.message);
+            console.error("error", error);
+        }
     };
 
     const getAllVehicles = async () => {
@@ -103,14 +133,14 @@ const AdminRoutesPage = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        
-        if(route.origin == '') {
+
+        if (route.origin == '') {
             toast.error("Origin loaction is required");
             return;
-        }else if(route.destination == '') {
+        } else if (route.destination == '') {
             toast.error("Destination location is required");
             return;
-        }else if (route.lorryCapacity == 0) {
+        } else if (route.lorryCapacity == 0) {
             toast.error("Lorry capacity is required");
             return;
         }
@@ -163,8 +193,9 @@ const AdminRoutesPage = () => {
         setWaypoints(newWaypoints);
     }
 
+
     const AssignVehicleModalBody = () => (
-        
+
         <FormControl>
             <FormLabel>Select Vehicle</FormLabel>
             <Select
@@ -306,21 +337,33 @@ const AdminRoutesPage = () => {
                         <Tr key={route._id}>
                             <Td>{route.origin}</Td>
                             <Td>{route.destination}</Td>
-                            <Td>{route.vehicle? route?.vehicle?.licensePlateNumber:'-'}</Td>
+                            <Td><Tooltip
+                                label={
+                                    route.vehicle
+                                        ? `Available Space: ${route.vehicle.containerCapacity}, Container Capacity: ${route.vehicle.maximumLoadCapacity}`
+                                        : 'No vehicle assigned'
+                                }
+                                aria-label="Vehicle details"
+                                bg="gray.600"
+                                color="white"
+                                placement="top"
+                            >
+                                <span>{route.vehicle ? route.vehicle.licensePlateNumber : '-'}</span>
+                            </Tooltip></Td>
                             <Td>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
                             <Td>{route.onTheWay ? 'Yes' : 'No'}</Td>
                             <Td>{route.color}</Td>
                             <Td>
                                 <Button
                                     colorScheme="yellow"
-                                    onClick={assignVehicleModalOnOpen}
+                                    onClick={() => { assignVehicleModalOnOpen(); setSelectedRoute(route); }}
                                     mr={2}
                                 >
                                     Assign Vehicle
                                 </Button>
                                 <Button
                                     colorScheme="red"
-                                    onClick={() => handleDeleteVehicle(route._id)}
+                                    onClick={() => handleDeleteRoute(route._id)}
                                 >
                                     Delete
                                 </Button>
