@@ -21,13 +21,14 @@ import {
     Center,
     Tooltip
 } from '@chakra-ui/react';
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import Loader3 from '../components/loader/loader3';
 import api from '../lib/axios';
 import ModalComponent from '../components/Modal/Modal';
 import { Autocomplete, useJsApiLoader } from '@react-google-maps/api';
 import { FaMapPin, FaRegTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { SocketContext } from '../lib/socketContext';
 
 const AdminRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
@@ -57,6 +58,7 @@ const AdminRoutesPage = () => {
     /** @type React.MutableRefObject<HTMLInputElement> */
     const waypointRef = useRef()
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
+    const { sendNotification } = useContext(SocketContext);
 
     useEffect(() => {
         getAllRoutes();
@@ -103,11 +105,11 @@ const AdminRoutesPage = () => {
             }
             const response = await api.put(`admin/assignvehicletoroute`, data);
             if (response) {
-                console.log(response);
                 setIsLoading(false);
                 toast.success(response.data.message);
                 getAllRoutes();
                 assignVehicleModalOnClose();
+                sendNotification(vehicles.find((vehicle) => vehicle._id === selectedVehicle).driver , "Hello! You have Assigned a Route.");
             }
         } catch (error) {
             setIsLoading(false);
@@ -134,13 +136,13 @@ const AdminRoutesPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (route.origin == '') {
+        if (originRef.current.value == '') {
             toast.error("Origin loaction is required");
             return;
-        } else if (route.destination == '') {
+        } else if (destiantionRef.current.value == '') {
             toast.error("Destination location is required");
             return;
-        } else if (route.lorryCapacity == 0) {
+        } else if (route.availableSpace == 0) {
             toast.error("Lorry capacity is required");
             return;
         }
@@ -153,7 +155,7 @@ const AdminRoutesPage = () => {
                 vehicle: selectedVehicle,
                 startDate: route.startDate,
                 endDate: route.endDate,
-                lorryCapacity: route.lorryCapacity
+                lorryCapacity: route.availableSpace
 
             };
             const response = await api.post('/direction/create', data);
@@ -166,7 +168,7 @@ const AdminRoutesPage = () => {
                     origin: "",
                     destination: "",
                     waypoints: [],
-                    lorryCapacity: 0,
+                    availableSpace: 0,
                     vehicle: "",
                     startDate: new Date(),
                     endDate: new Date()
@@ -221,7 +223,7 @@ const AdminRoutesPage = () => {
                 </Heading>
             </Center>
             <Box mb={4}>
-                {/* <Button colorScheme="teal" onClick={addRouteModalOnOpen} mr={2}>
+                {/* <Button colorScheme="teal" onClick={handleSend} mr={2}>
                     Add New Route
                 </Button>
                 <Button colorScheme="blue" mr={2}>
@@ -261,7 +263,7 @@ const AdminRoutesPage = () => {
                                     <Input type="date" value={route.endDate} onChange={(e) => setRoute({ ...route, endDate: e.target.value })} />
                                 </Flex>
                             </Flex>
-                            <FormLabel marginTop={2}>Select Vehicle</FormLabel>
+                            {/* <FormLabel marginTop={2}>Select Vehicle</FormLabel>
                             <Select
                                 placeholder="Select vehicle"
                                 value={selectedVehicle}
@@ -272,7 +274,7 @@ const AdminRoutesPage = () => {
                                         {vehicle.licensePlateNumber}
                                     </option>
                                 ))}
-                            </Select>
+                            </Select> */}
                             <FormLabel marginTop={2}>Available Space (meeter cubes)</FormLabel>
                             <Input
                                 type="text"
@@ -350,8 +352,8 @@ const AdminRoutesPage = () => {
                             >
                                 <span>{route.vehicle ? route.vehicle.licensePlateNumber : '-'}</span>
                             </Tooltip></Td>
-                            <Td>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
-                            <Td>{route.onTheWay ? 'Yes' : 'No'}</Td>
+                            <Td style={{color:route.driverConfirmed?'green':'red'}}>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
+                            <Td style={{color:route.onTheWay?'green':'red'}}>{route.onTheWay ? 'Yes' : 'No'}</Td>
                             <Td>{route.color}</Td>
                             <Td>
                                 <Button
