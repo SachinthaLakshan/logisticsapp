@@ -9,11 +9,11 @@ const SocketContext = createContext();
 
 // Connect to the backend server
 //const socket = io('http://localhost:9001', {
-const socket = io('https://logisticsappbackend.vercel.app', {
+const socket = io('https://web-production-02f7b.up.railway.app', {
   autoConnect: false, // Prevent auto-connecting before setting listeners
   reconnection: true, // Allow reconnection attempts
   reconnectionAttempts: 5,
-  reconnectionDelay: 2000,
+  reconnectionDelay: 2000
 });
 
 const ContextProvider = ({ children }) => {
