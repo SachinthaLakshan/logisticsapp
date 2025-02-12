@@ -4,6 +4,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ChakraProvider, theme } from '@chakra-ui/react'
 import { Providers } from "./providers.";
 import { ToastContainer } from "react-toastify";
+import { ContextProvider } from "./lib/socketContext";
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -26,7 +27,9 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       > <ToastContainer/>
+      <ContextProvider>
         <Providers>{children}</Providers>
+        </ContextProvider>
       </body>
     </html>
   );

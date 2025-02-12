@@ -1,12 +1,12 @@
 'use client'
-import { Box, Button, Flex } from "@chakra-ui/react";
+import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
 import {
     useJsApiLoader,
     GoogleMap,
     Marker,
     DirectionsRenderer,
 } from '@react-google-maps/api'
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Loader from "../components/loader/loader";
 import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan } from "react-icons/fa";
 import {
@@ -29,6 +29,7 @@ import Loader2 from "../components/loader/loader2";
 import { useCookies } from "react-cookie";
 import jwt from 'jsonwebtoken';
 import { useRouter } from "next/navigation";
+import { SocketContext } from "../lib/socketContext";
 
 const Page = () => {
     const cardBg = useColorModeValue('#3A3D42', '#2F3136');
@@ -49,6 +50,7 @@ const Page = () => {
     const [cookie, setCookie, removeCookie] = useCookies();
     const center = { lat: 48.8584, lng: 2.2945 }
     const lorryLogo = 'https://res.cloudinary.com/dryeiaocv/image/upload/v1732651866/lorry_kq6btk.png';
+    const { notifications } = useContext(SocketContext);
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -63,7 +65,12 @@ const Page = () => {
             );
         }
         getLogedUser();
+
     }, []);
+
+    useEffect(() => {
+        findAvailableRoutes();
+    }, [notifications])
 
     const getLogedUser = async () => {
         const token = cookies['auth-token'];
@@ -73,7 +80,7 @@ const Page = () => {
         try {
             const response = await api.get(`user/getuser/${decodedUserData.userId}`);
             if (response) {
-                if (response.data) {                 
+                if (response.data) {
                     setUser(response.data.data)
                 }
             }
@@ -141,7 +148,7 @@ const Page = () => {
             updateDriverCurrentLocation();
         } else {
             try {
-                const response = await api.get(`direction/findtrip/${user.vehicleDetails}`);
+                const response = await api.get(`direction/findtrip/${user.vehicleDetails._id}`);
                 if (response) {
                     setSearching(false);
                     if (response.data) {
@@ -160,8 +167,9 @@ const Page = () => {
                         toast.error(response.data.message);
                     }
                 }
-            } catch (err) {
-                console.error("Login failed:", err);
+            } catch (error) {
+                console.log("Route failed:", error.response.data.message);
+                toast.error(error.response.data.message);
             }
         }
 
@@ -173,7 +181,7 @@ const Page = () => {
 
     const updateDriverCurrentLocation = async () => {
         try {
-             await api.put(`direction/updatecurrentlocation`, { directionId:availableRoute._id , lat:currentLocation.lat, lng: currentLocation.lng });
+            await api.put(`direction/updatecurrentlocation`, { directionId: availableRoute._id, lat: currentLocation.lat, lng: currentLocation.lng });
         } catch (err) {
             console.log("Error:", err);
         }
@@ -183,20 +191,38 @@ const Page = () => {
         router.push('/login');
     };
 
+    const onRemoveTrip = async () => {
+
+        setSearching(true);
+        try {
+            const response = await api.delete(`direction/ignore/${availableRoute._id}`);
+            if (response) {
+                if (response.data) {
+                    setSearching(false);
+                    toast.success(response.data.message);
+                    findAvailableRoutes();
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+
+    }
+
     return (
         <div>
-            <Button 
-                    
-                    colorScheme="teal" 
-                    size="sm"
-                    position={'absolute'}
-                    top={0}
-                    left={0}
-                    zIndex={5}
-                    onClick={handleLogout}
-                >
-                    Logout
-                </Button>
+            <Button
+
+                colorScheme="teal"
+                size="sm"
+                position={'absolute'}
+                top={0}
+                left={0}
+                zIndex={5}
+                onClick={handleLogout}
+            >
+                Logout
+            </Button>
             {isLoaded ? (
                 <Flex
                     position='relative'
@@ -204,35 +230,35 @@ const Page = () => {
                     alignItems='center'
                     h='100vh'
                     w='100vw'
-                >{ 
-                    <Box
-                        p={5}
-                        bg="rgb(5, 5, 5,0.5)"
-                        borderRadius="20px"
-                        boxShadow="lg"
-                        textAlign="left"
-                        width="250px"
-                        position={'absolute'}
-                        top={'10px'}
-                        zIndex={3}
-                        padding={4}
-                    >
-                        <Grid templateColumns="1fr auto" alignItems="center">
-                            <Image
-                                src="lorry.png"
-                                alt="Lorry Logo"
-                                boxSize="50px"
-                            />
-                            <Box>
-                                <Text fontSize="medium" color="white">
-                                    Remaining Capacity
-                                </Text>
-                                <Text fontSize="xl" color="green.400">
-                                    <strong>{user?.vehicleDetails?.containerCapacity}%</strong>
-                                </Text>
-                            </Box>
-                        </Grid>
-                    </Box>
+                >{
+                        <Box
+                            p={5}
+                            bg="rgb(5, 5, 5,0.5)"
+                            borderRadius="20px"
+                            boxShadow="lg"
+                            textAlign="left"
+                            width="250px"
+                            position={'absolute'}
+                            top={'10px'}
+                            zIndex={3}
+                            padding={4}
+                        >
+                            <Grid templateColumns="1fr auto" alignItems="center">
+                                <Image
+                                    src="lorry.png"
+                                    alt="Lorry Logo"
+                                    boxSize="50px"
+                                />
+                                <Box>
+                                    <Text fontSize="medium" color="white">
+                                        Remaining Capacity
+                                    </Text>
+                                    <Text fontSize="xl" color="green.400">
+                                        <strong>{user?.vehicleDetails?.containerCapacity}%</strong>
+                                    </Text>
+                                </Box>
+                            </Grid>
+                        </Box>
 
                     }
                     {bottomPopUpOpened &&
@@ -246,7 +272,7 @@ const Page = () => {
                                     <Box display={'flex'} flexDirection={'row'}>
                                         {!tripAccepted && <>
                                             <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onStartTrip()} color={'white'} backgroundColor={'green'} size="md" >Start Trip</Button>
-                                            <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} color={'white'} backgroundColor={'red'} size="md" >Ignore Trip</Button>
+                                            <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} onClick={() => onRemoveTrip()} color={'white'} backgroundColor={'red'} size="md" >Ignore Trip</Button>
                                         </>
                                         }
                                         {tripAccepted && <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaBan />} onClick={() => onCancelTrip()} color={'white'} backgroundColor={'red'} size="lg" >Cansel Trip</Button>}
