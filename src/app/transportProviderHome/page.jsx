@@ -200,7 +200,7 @@ const Page = () => {
                 if (response.data) {
                     setSearching(false);
                     toast.success(response.data.message);
-                    findAvailableRoutes();
+                    onClosePopup();
                 }
             }
         } catch (error) {
