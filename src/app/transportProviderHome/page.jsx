@@ -39,6 +39,7 @@ const Page = () => {
     const [availableRoute, setAvailableRoute] = useState({});
     const [searching, setSearching] = useState(false);
     const [tripAccepted, setTripAccepted] = useState(false);
+    const [tripStarted, setTripStarted] = useState(false);
     const [bottomPopUpOpened, setBottomPopUpOpened] = useState(false);
     const [user, setUser] = useState({});
     const [cookies] = useCookies(['auth-token']);
@@ -50,7 +51,8 @@ const Page = () => {
     const [cookie, setCookie, removeCookie] = useCookies();
     const center = { lat: 48.8584, lng: 2.2945 }
     const lorryLogo = 'https://res.cloudinary.com/dryeiaocv/image/upload/v1732651866/lorry_kq6btk.png';
-    const { notifications } = useContext(SocketContext);
+    const { notifications, sendNotification } = useContext(SocketContext);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -69,10 +71,13 @@ const Page = () => {
     }, []);
 
     useEffect(() => {
-        findAvailableRoutes();
+        if (!isLoading) {
+            findAvailableRoutes();
+        }
     }, [notifications])
 
     const getLogedUser = async () => {
+        setIsLoading(true);
         const token = cookies['auth-token'];
 
         const decodedUserData = jwt.decode(token);
@@ -81,10 +86,12 @@ const Page = () => {
             const response = await api.get(`user/getuser/${decodedUserData.userId}`);
             if (response) {
                 if (response.data) {
+                    setIsLoading(false);
                     setUser(response.data.data)
                 }
             }
         } catch (error) {
+            setIsLoading(false);
             console.log(error);
         }
     }
@@ -117,6 +124,7 @@ const Page = () => {
                     setBottomPopUpOpened(false);
                     updateDriverCurrentLocation();
                     toast.success(response.data.message);
+                    sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has accepted the trip`);
                 }
             }
         } catch (error) {
@@ -133,6 +141,7 @@ const Page = () => {
                     setTripAccepted(false);
                     setBottomPopUpOpened(true);
                     toast.success(response.data.message);
+                    sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has Cancel the trip`);
                 }
             }
         } catch (error) {
@@ -161,6 +170,9 @@ const Page = () => {
                             });
                             calculateRoute(currentLocation, response.data.data.destination, waypoints);
                         }
+                        if(response.data.data.onTheWay){
+                            setTripStarted(true);
+                        }
                         setBottomPopUpOpened(true);
                         updateDriverCurrentLocation();
                     } else {
@@ -168,7 +180,7 @@ const Page = () => {
                     }
                 }
             } catch (error) {
-                console.log("Route failed:", error.response.data.message);
+                console.log("Route failed:", error);
                 toast.error(error.response.data.message);
             }
         }
@@ -201,12 +213,31 @@ const Page = () => {
                     setSearching(false);
                     toast.success(response.data.message);
                     onClosePopup();
+                    sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has Ignore the trip`);
                 }
             }
         } catch (error) {
             console.error("error", error);
         }
 
+    }
+
+    const onConfirmStartTrip =async () => {
+        setSearching(true);
+        try {
+            const response = await api.put(`direction/starttrip/${availableRoute._id}`);
+            if (response) {
+                if (response.data) {
+                    setSearching(false);
+                    toast.success(response.data.message);
+                    onClosePopup();
+                    setTripStarted(true);
+                    sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has Start the trip and on the way`);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
     }
 
     return (
@@ -223,7 +254,7 @@ const Page = () => {
             >
                 Logout
             </Button>
-            {isLoaded ? (
+            {isLoaded && !isLoading ? (
                 <Flex
                     position='relative'
                     flexDirection='column'
@@ -264,24 +295,30 @@ const Page = () => {
                     {bottomPopUpOpened &&
                         <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
                             <CardHeader>
-                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md">Assigned Trip Details <FaWindowClose onClick={() => onClosePopup()} style={{ marginLeft: '30px' }} /> </Heading>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md">{tripAccepted?'Accepted':'Assigned'} Trip Details <FaWindowClose onClick={() => onClosePopup()} style={{ marginLeft: '30px' }} /> </Heading>
                             </CardHeader>
                             <CardBody>
                                 <List display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={2}>
-                                    <ListItem color={'whiteAlpha.900'}>{` ${availableRoute.origin}  to  ${availableRoute.destination}`}</ListItem>
+                                    <ListItem color={'whiteAlpha.900'}>{availableRoute.origin} <span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To </span> {availableRoute.destination}</ListItem>
+                                    <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Start At :</span>{` ${availableRoute.startDate} | ${availableRoute.startTime}`}</ListItem>
+                                    <ListItem className="mb-2" color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Company : </span>{`${availableRoute?.createdBy?.fullName}`}</ListItem>
                                     <Box display={'flex'} flexDirection={'row'}>
                                         {!tripAccepted && <>
-                                            <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onStartTrip()} color={'white'} backgroundColor={'green'} size="md" >Start Trip</Button>
+                                            <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onStartTrip()} color={'white'} backgroundColor={'green'} size="md" >Accept Trip</Button>
                                             <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} onClick={() => onRemoveTrip()} color={'white'} backgroundColor={'red'} size="md" >Ignore Trip</Button>
                                         </>
                                         }
-                                        {tripAccepted && <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaBan />} onClick={() => onCancelTrip()} color={'white'} backgroundColor={'red'} size="lg" >Cansel Trip</Button>}
+                                        {tripAccepted && !tripStarted &&
+                                            <>   <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onConfirmStartTrip()} color={'white'} backgroundColor={'green'} size="md" >Start</Button>
+                                                <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaBan />} onClick={() => onCancelTrip()} color={'white'} backgroundColor={'red'} size="md" >Cansel</Button>
+                                            </>
+                                        }
 
                                     </Box>
 
                                 </List>
                             </CardBody>
-                            {!tripAccepted &&
+                            {!tripAccepted && 
                                 <CardFooter>
                                     <Text fontSize="sm" color="gray.400">
                                         Search again for find new trip

@@ -29,6 +29,8 @@ import { Autocomplete, useJsApiLoader } from '@react-google-maps/api';
 import { FaMapPin, FaRegTimesCircle } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { SocketContext } from '../lib/socketContext';
+import { useCookies } from "react-cookie";
+import jwt from 'jsonwebtoken';
 
 const AdminRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
@@ -44,8 +46,10 @@ const AdminRoutesPage = () => {
         lorryCapacity: 0,
         vehicle: "",
         startDate: new Date(),
-        endDate: new Date()
+        endDate: new Date(),
+        startTime: "",
     });
+    const [cookies] = useCookies(['auth-token']);
     const libraries = ['places'];
     const { isLoaded } = useJsApiLoader({
         googleMapsApiKey: process?.env?.NEXT_PUBLIC_API_KEY,
@@ -109,7 +113,7 @@ const AdminRoutesPage = () => {
                 toast.success(response.data.message);
                 getAllRoutes();
                 assignVehicleModalOnClose();
-                sendNotification(vehicles.find((vehicle) => vehicle._id === selectedVehicle).driver , "Hello! You have Assigned a Route.");
+                sendNotification(vehicles.find((vehicle) => vehicle._id === selectedVehicle).driver, "Hello! You have Assigned a Route.");
             }
         } catch (error) {
             setIsLoading(false);
@@ -146,6 +150,8 @@ const AdminRoutesPage = () => {
             toast.error("Lorry capacity is required");
             return;
         }
+        const token = cookies['auth-token'];
+        const decodedUserData = jwt.decode(token);
 
         try {
             let data = {
@@ -155,7 +161,9 @@ const AdminRoutesPage = () => {
                 vehicle: selectedVehicle,
                 startDate: route.startDate,
                 endDate: route.endDate,
-                lorryCapacity: route.availableSpace
+                lorryCapacity: route.availableSpace,
+                startTime: route.startTime,
+                createdBy:decodedUserData.userId
 
             };
             const response = await api.post('/direction/create', data);
@@ -171,7 +179,8 @@ const AdminRoutesPage = () => {
                     availableSpace: 0,
                     vehicle: "",
                     startDate: new Date(),
-                    endDate: new Date()
+                    endDate: new Date(),
+                    startTime: ""
                 });
                 setWaypoints([]);
             }
@@ -259,6 +268,10 @@ const AdminRoutesPage = () => {
                                     <Input type="date" value={route.startDate} onChange={(e) => setRoute({ ...route, startDate: e.target.value })} />
                                 </Flex>
                                 <Flex flexDirection="column" width={'50%'}>
+                                    <FormLabel>Start Time</FormLabel>
+                                    <Input type="time" value={route.startTime} onChange={(e) => setRoute({ ...route, startTime: e.target.value })} />
+                                </Flex>
+                                <Flex flexDirection="column" width={'50%'}>
                                     <FormLabel>End Date</FormLabel>
                                     <Input type="date" value={route.endDate} onChange={(e) => setRoute({ ...route, endDate: e.target.value })} />
                                 </Flex>
@@ -329,6 +342,8 @@ const AdminRoutesPage = () => {
                     <Tr>
                         <Th>Origin</Th>
                         <Th>Destination</Th>
+                        <Th>Start Date/Time</Th>
+                        <Th>End Date</Th>
                         <Th>Assigned Vehicle</Th>
                         <Th>Driver Confirmed</Th>
                         <Th>Vehicle On The Way</Th>
@@ -339,6 +354,10 @@ const AdminRoutesPage = () => {
                         <Tr key={route._id}>
                             <Td>{route.origin}</Td>
                             <Td>{route.destination}</Td>
+                            <Td>
+                                {route.startDate ? route.startDate : '-'} | {route.startTime ? route.startTime : '-'}
+                            </Td>
+                            <Td>{route.endDate? route.endDate: '-'}</Td>
                             <Td><Tooltip
                                 label={
                                     route.vehicle
@@ -352,8 +371,8 @@ const AdminRoutesPage = () => {
                             >
                                 <span>{route.vehicle ? route.vehicle.licensePlateNumber : '-'}</span>
                             </Tooltip></Td>
-                            <Td style={{color:route.driverConfirmed?'green':'red'}}>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
-                            <Td style={{color:route.onTheWay?'green':'red'}}>{route.onTheWay ? 'Yes' : 'No'}</Td>
+                            <Td style={{ color: route.driverConfirmed ? 'green' : 'red' }}>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
+                            <Td style={{ color: route.onTheWay ? 'green' : 'red' }}>{route.onTheWay ? 'Yes' : 'No'}</Td>
                             <Td>{route.color}</Td>
                             <Td>
                                 <Button
