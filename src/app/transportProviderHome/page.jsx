@@ -4,11 +4,11 @@ import {
     useJsApiLoader,
     GoogleMap,
     Marker,
-    DirectionsRenderer,
+    DirectionsRenderer
 } from '@react-google-maps/api'
 import { useContext, useEffect, useState } from "react";
 import Loader from "../components/loader/loader";
-import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan } from "react-icons/fa";
+import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan, FaUsers } from "react-icons/fa";
 import {
 
     Card,
@@ -53,6 +53,8 @@ const Page = () => {
     const lorryLogo = 'https://res.cloudinary.com/dryeiaocv/image/upload/v1732651866/lorry_kq6btk.png';
     const { notifications, sendNotification } = useContext(SocketContext);
     const [isLoading, setIsLoading] = useState(true);
+    const [customerPopUpOpened, setCustomerPopUpOpened] = useState(false);
+    const [customerRequests, setCustomerRequests] = useState([]);
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -87,7 +89,8 @@ const Page = () => {
             if (response) {
                 if (response.data) {
                     setIsLoading(false);
-                    setUser(response.data.data)
+                    setUser(response.data.data);
+                    featchCustomerRequests();
                 }
             }
         } catch (error) {
@@ -170,7 +173,7 @@ const Page = () => {
                             });
                             calculateRoute(currentLocation, response.data.data.destination, waypoints);
                         }
-                        if(response.data.data.onTheWay){
+                        if (response.data.data.onTheWay) {
                             setTripStarted(true);
                         }
                         setBottomPopUpOpened(true);
@@ -222,7 +225,7 @@ const Page = () => {
 
     }
 
-    const onConfirmStartTrip =async () => {
+    const onConfirmStartTrip = async () => {
         setSearching(true);
         try {
             const response = await api.put(`direction/starttrip/${availableRoute._id}`);
@@ -233,6 +236,56 @@ const Page = () => {
                     onClosePopup();
                     setTripStarted(true);
                     sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has Start the trip and on the way`);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
+    const onCustomerPopUpOpened = () => {
+        setCustomerPopUpOpened(!customerPopUpOpened);
+    }
+
+    const featchCustomerRequests = async () => {
+        const token = cookies['auth-token'];
+
+        const decodedUserData = jwt.decode(token);
+        try {
+            const response = await api.get(`customerrequest/getcustomerrequests/${decodedUserData.userId}`);
+            if (response) {
+                if (response.data) {
+                    setCustomerRequests(response.data);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
+    const removeCustomerRequest = async (id) => {
+        try {
+            const response = await api.delete(`customerrequest/delete/${id}`);
+            if (response) {
+                if (response.data) {
+                    toast.success(response.data.message);
+                    featchCustomerRequests();
+                    setCustomerPopUpOpened(false);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
+    const acceptCustomerRequest = async (req) => {
+        try {
+            const response = await api.put(`customerrequest/accept/${req._id}/testroutId`,{address:req.customerLocation});
+            if (response) {
+                if (response.data) {
+                    toast.success(response.data.message);
+                    featchCustomerRequests();
+                    setCustomerPopUpOpened(false);
                 }
             }
         } catch (error) {
@@ -295,7 +348,7 @@ const Page = () => {
                     {bottomPopUpOpened &&
                         <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
                             <CardHeader>
-                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md">{tripAccepted?'Accepted':'Assigned'} Trip Details <FaWindowClose onClick={() => onClosePopup()} style={{ marginLeft: '30px' }} /> </Heading>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md">{tripAccepted ? 'Accepted' : 'Assigned'} Trip Details <FaWindowClose onClick={() => onClosePopup()} style={{ marginLeft: '30px' }} /> </Heading>
                             </CardHeader>
                             <CardBody>
                                 <List display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={2}>
@@ -318,7 +371,7 @@ const Page = () => {
 
                                 </List>
                             </CardBody>
-                            {!tripAccepted && 
+                            {!tripAccepted &&
                                 <CardFooter>
                                     <Text fontSize="sm" color="gray.400">
                                         Search again for find new trip
@@ -327,8 +380,33 @@ const Page = () => {
                             }
                         </Card>
                     }
+                    {customerPopUpOpened &&
+                        <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
+                            <CardHeader>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md"> Customer Requests <FaWindowClose onClick={() => setCustomerPopUpOpened(false)} style={{ marginLeft: '30px' }} /> </Heading>
+                            </CardHeader>
+                            <CardBody >
+                                {
+                                    customerRequests.length > 0 && customerRequests.map((request, index) => (
+                                        <List key={index} marginBottom={2} borderRadius={10} padding={2} border={'2px solid #b9b7b7'} display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={2}>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Address : {request.customerLocation} </span> </ListItem>
+                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Contact No :</span>{request.requestedBy.contactNumber}</ListItem>
+                                            <Box display={'flex'} flexDirection={'row'}>
+                                                <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => acceptCustomerRequest(request)} color={'white'} backgroundColor={'green'} size="md" >Accept</Button>
+                                                <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} onClick={() => removeCustomerRequest(request._id)} color={'white'} backgroundColor={'red'} size="md" >Ignore</Button>
+                                            </Box>
+
+                                        </List>
+                                    ))
+                                }
+                            </CardBody>
+                        </Card>
+                    }
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaEye color="white" style={{ marginRight: '5px' }} size={20} /> My Trips
+                    </Button>
+                    <Button onClick={() => onCustomerPopUpOpened()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
+                        <FaUsers color="white" style={{ marginRight: '5px' }} size={20} />
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
