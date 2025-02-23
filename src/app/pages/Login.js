@@ -40,16 +40,23 @@ const Login = () => {
         const token = cookies['auth-token'];
         if(token){
             const decodedUserData = jwt.decode(token);
-            if(decodedUserData.userType == 'LogisticsCompany'){
-                router.push('/companyHome');
-                setIsLoading(false);
-            }else if(decodedUserData.userType == 'TransportProvider'){
-                router.push('/transportProviderHome');
-                setIsLoading(false) 
+            if(decodedUserData){
+                if(decodedUserData.userType == 'LogisticsCompany'){
+                    router.push('/companyHome');
+                    setIsLoading(false);
+                }else if(decodedUserData.userType == 'TransportProvider'){
+                    router.push('/transportProviderHome');
+                    setIsLoading(false) 
+                }else{
+                    router.push('/customerHome');
+                    setIsLoading(false)
+                }
             }else{
-                router.push('/customerHome');
-                setIsLoading(false)
+                setIsLoading(false);
+                router.push('/login');
             }
+            
+            
         }else{
             setIsLoading(false);
         }

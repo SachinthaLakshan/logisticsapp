@@ -140,7 +140,8 @@ const Page = () => {
                 customerLocation: address,
                 vehicle: selectedRoute.vehicle._id,
                 requestedBy: decodedUserData.userId,
-                requestedTo: selectedRoute.vehicle.driver
+                requestedTo: selectedRoute.vehicle.driver,
+                route: selectedRoute._id
 
             }
             const response = await api.post('/customerrequest/create', data);

@@ -280,7 +280,7 @@ const Page = () => {
 
     const acceptCustomerRequest = async (req) => {
         try {
-            const response = await api.put(`customerrequest/accept/${req._id}/testroutId`,{address:req.customerLocation});
+            const response = await api.put(`customerrequest/accept/${req._id}/${req.route._id}`,{address:req.customerLocation},{address:req.customerLocation });
             if (response) {
                 if (response.data) {
                     toast.success(response.data.message);
@@ -405,7 +405,7 @@ const Page = () => {
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaEye color="white" style={{ marginRight: '5px' }} size={20} /> My Trips
                     </Button>
-                    <Button onClick={() => onCustomerPopUpOpened()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
+                    <Button onClick={() =>customerRequests.length > 0? onCustomerPopUpOpened() : toast.error( 'No Requests Found')} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
                         <FaUsers color="white" style={{ marginRight: '5px' }} size={20} />
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
