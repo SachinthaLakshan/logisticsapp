@@ -86,8 +86,10 @@ const AdminRoutesPage = () => {
     };
 
     const getAllRoutes = async () => {
+        const token = cookies['auth-token'];
+        const decodedUserData = jwt.decode(token);
         try {
-            const response = await api.get(`admin/getallroutes`);
+            const response = await api.get(`admin/getallroutes/${decodedUserData.userId}`);
             if (response) {
                 if (response.data) {
                     setRoutes(response.data);
