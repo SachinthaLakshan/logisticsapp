@@ -80,6 +80,11 @@ const Page = () => {
         if (notifications.length > 0) {
            
             const notification = notifications[notifications.length - 1];
+            if(notification.message.includes('Your goods have delivered successfully')){
+                setCurrentLocation(null);
+                setSearched(false);
+                setDirectionsResponse(null);
+            }
             if(notification.message.includes('|')){
                 const routeID = notification.message.split('|')[1];
                 getRouteById(routeID);
@@ -365,9 +370,6 @@ const Page = () => {
                     }
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaSearch color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
-                    </Button>
-                    <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} right={25}>
-                        <FaUserCheck color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
