@@ -247,7 +247,7 @@ const Page = () => {
         }
     }
 
-    const featchCustomerRequests = async () => {
+    const featchCustomerRequests = async (feated) => {
         const token = cookies['auth-token'];
 
         const decodedUserData = jwt.decode(token);
@@ -258,7 +258,8 @@ const Page = () => {
                 if (response.data) {
                     if(response.data.length === 0){
                     setIsLoading(false);
-                       return toast.error('No Requests Found');
+                    setCustomerPopUpOpened(false);
+                       return feated && toast.error('No Requests Found');
                     }
                     setCustomerRequests(response.data);
                     setCustomerPopUpOpened(!customerPopUpOpened);
@@ -271,7 +272,7 @@ const Page = () => {
         }
     }
 
-    const featchAccptedCustomerRequests = async () => {
+    const featchAccptedCustomerRequests = async (feated) => {
         const token = cookies['auth-token'];
 
         const decodedUserData = jwt.decode(token);
@@ -282,7 +283,8 @@ const Page = () => {
                 if (response.data) {
                     if(response.data.length === 0){
                         setIsLoading(false);
-                       return toast.error('No Accepted Requests Found');
+                        setAcceptedCustomersPopUpOpened(false);
+                       return feated && toast.error('No Accepted Requests Found');
                     }
                     setAcceptedCustomerRequests(response.data);
                     setAcceptedCustomersPopUpOpened(!acceptedCustomersPopUpOpened);
@@ -301,7 +303,7 @@ const Page = () => {
             if (response) {
                 if (response.data) {
                     toast.success(response.data.message);
-                    featchCustomerRequests();
+                    featchCustomerRequests(false);
                     setCustomerPopUpOpened(false);
                 }
             }
@@ -316,7 +318,7 @@ const Page = () => {
             if (response) {
                 if (response.data) {
                     toast.success(response.data.message);
-                    featchCustomerRequests();
+                    featchCustomerRequests( false);
                     setCustomerPopUpOpened(false);
                     sendNotification(req.requestedBy._id, `${user.vehicleDetails.licensePlateNumber} :Vehicle has accepted your request|${req.route._id}`);
                 }
@@ -347,11 +349,26 @@ const Page = () => {
     };
 
     const handleAcceptedCustomerRequests = () => {
-        featchAccptedCustomerRequests();
+        featchAccptedCustomerRequests(true);
     }
 
     const handleCustomerRequests = () => {
-        featchCustomerRequests();
+        featchCustomerRequests(true);
+    }
+
+    const onDeliveredOrder = async (request) => {
+        try {
+            const response = await api.delete(`customerrequest/delivered/${request._id}`);
+            if (response) {
+                if (response.data) {
+                    toast.success(response.data.message);
+                    featchAccptedCustomerRequests(false);
+                    sendNotification(request.requestedBy._id, `Your goods have delivered successfully`);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
     }
 
     return (
@@ -514,9 +531,9 @@ const Page = () => {
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
                                             <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Contact No :</span>{request.requestedBy.contactNumber}</ListItem>
-                                            {/* <Box display={'flex'} flexDirection={'row'}>
-                                                <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} onClick={() => removeCustomerRequest(request._id)} color={'white'} backgroundColor={'red'} size="md" >Ignore</Button>
-                                            </Box> */}
+                                            <Box display={'flex'} flexDirection={'row'}>
+                                            <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onDeliveredOrder(request)} color={'white'} backgroundColor={'green'} size="md" >Delivered</Button>
+                                            </Box>
 
                                         </List>
                                     ))
