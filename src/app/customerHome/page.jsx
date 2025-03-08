@@ -1,5 +1,5 @@
 'use client'
-import { Box, Button, Flex, ListIcon, OrderedList, useDisclosure, } from "@chakra-ui/react";
+import { Box, Button, Flex, FormControl, FormLabel, Input, ListIcon, OrderedList, useDisclosure, } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import {
     useJsApiLoader,
@@ -45,6 +45,8 @@ const Page = () => {
     const router = useRouter();
     const [cookies, removeCookie] = useCookies();
     const [address, setAddress] = useState("");
+    const [toAddress, setToAddress] = useState("");
+    const [capacityOfGoods, setCapacityOfGoods] = useState(0); 
     const { notifications, sendNotification } = useContext(SocketContext);
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
     const { isLoaded } = useJsApiLoader({
@@ -135,13 +137,23 @@ const Page = () => {
     const makeCustomerRequest = async () => {
         const token = cookies['auth-token'];
         const decodedUserData = jwt.decode(token);
+        if(toAddress == '' ){
+            toast.error('To address is required!');
+            return;
+        }
+        if(capacityOfGoods == 0 ){
+            toast.error('Capacity of goods is required!');
+            return;
+        }
         try {
             const data = {
                 customerLocation: address,
                 vehicle: selectedRoute.vehicle._id,
                 requestedBy: decodedUserData.userId,
                 requestedTo: selectedRoute.vehicle.driver,
-                route: selectedRoute._id
+                route: selectedRoute._id,
+                toAddress: toAddress,
+                capacityOfGoods: capacityOfGoods
 
             }
             const response = await api.post('/customerrequest/create', data);
@@ -178,83 +190,104 @@ const Page = () => {
 
     const SelectedRouteDetailsModalBody = () => (
 
-        <Card maxW="md" boxShadow="lg" borderRadius="lg" overflow="scroll" minHeight={"300px"} maxHeight={"300px"}>
-            <CardBody>
-                <List spacing={3}>
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaMapMarkerAlt} color="teal.500" />
-                            <Text fontWeight="bold">Start:</Text>
-                            <Text ml={2}>{selectedRoute.origin}</Text>
-                        </Flex>
-                    </ListItem>
+        <Card maxW="md"  borderRadius="lg" overflow="scroll" overflowX="unset" minHeight={"300px"} maxHeight={"300px"}>
+        <CardBody>
+            <List spacing={3}>
+                {/* Input fields for Capacity of Goods, From Address, and To Address */}
+                <ListItem>
+                    <FormControl>
+                        <FormLabel>Capacity of Goods ( ㎥ )</FormLabel>
+                        <Input value={capacityOfGoods} onChange={(e)=> setCapacityOfGoods(e.target.value)} placeholder="Enter capacity of goods" type="number" />
+                    </FormControl>
+                </ListItem>
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaFlagCheckered} color="teal.500" />
-                            <Text fontWeight="bold">End:</Text>
-                            <Text ml={2}>{selectedRoute.destination}</Text>
-                        </Flex>
-                    </ListItem>
+                {/* <ListItem>
+                    <FormControl>
+                        <FormLabel>From Address</FormLabel>
+                        <Input placeholder="Enter from address"  />
+                    </FormControl>
+                </ListItem> */}
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaCalendarAlt} color="teal.500" />
-                            <Text fontWeight="bold">Start Date:</Text>
-                            <Text ml={2}>{selectedRoute.startDate}</Text>
-                        </Flex>
-                    </ListItem>
+                <ListItem>
+                    <FormControl>
+                        <FormLabel>To Address</FormLabel>
+                        <Input value={toAddress} onChange={(e)=> setToAddress(e.target.value)} placeholder="Enter to address" />
+                    </FormControl>
+                </ListItem>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaMapMarkerAlt} color="teal.500" />
+                        <Text fontWeight="bold">Start:</Text>
+                        <Text ml={2}>{selectedRoute.origin}</Text>
+                    </Flex>
+                </ListItem>
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaClock} color="teal.500" />
-                            <Text fontWeight="bold">Start Time:</Text>
-                            <Text ml={2}>{selectedRoute.startTime}</Text>
-                        </Flex>
-                    </ListItem>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaFlagCheckered} color="teal.500" />
+                        <Text fontWeight="bold">End:</Text>
+                        <Text ml={2}>{selectedRoute.destination}</Text>
+                    </Flex>
+                </ListItem>
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaCar} color="teal.500" />
-                            <Text fontWeight="bold">Vehicle No:</Text>
-                            <Text ml={2}>{selectedRoute.vehicle?.licensePlateNumber}</Text>
-                        </Flex>
-                    </ListItem>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaCalendarAlt} color="teal.500" />
+                        <Text fontWeight="bold">Start Date:</Text>
+                        <Text ml={2}>{selectedRoute.startDate}</Text>
+                    </Flex>
+                </ListItem>
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaTruck} color="teal.500" />
-                            <Text fontWeight="bold">Vehicle Capacity:</Text>
-                            <Text ml={2}>{selectedRoute.vehicle?.containerCapacity} ㎥</Text>
-                        </Flex>
-                    </ListItem>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaClock} color="teal.500" />
+                        <Text fontWeight="bold">Start Time:</Text>
+                        <Text ml={2}>{selectedRoute.startTime}</Text>
+                    </Flex>
+                </ListItem>
 
-                    <ListItem>
-                        <Flex align="center">
-                            <ListIcon as={FaRoad} color="teal.500" />
-                            <Text fontWeight="bold">Vehicle On The Way:</Text>
-                            <Text ml={2} color={selectedRoute.onTheWay ? 'green.500' : 'red.500'}>
-                                {selectedRoute.onTheWay ? 'Yes' : 'No'}
-                            </Text>
-                        </Flex>
-                    </ListItem>
-                    <ListItem>
-                        <Flex align="start">
-                            <ListIcon as={FaMapPin} color="teal.500" />
-                            <Box>
-                                <Text fontWeight="bold">Waypoints:</Text>
-                                <OrderedList pl={4} mt={2}>
-                                    {selectedRoute?.waypoints?.map((point, index) => (
-                                        <li key={index}>{point}</li>
-                                    ))}
-                                </OrderedList>
-                            </Box>
-                        </Flex>
-                    </ListItem>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaCar} color="teal.500" />
+                        <Text fontWeight="bold">Vehicle No:</Text>
+                        <Text ml={2}>{selectedRoute.vehicle?.licensePlateNumber}</Text>
+                    </Flex>
+                </ListItem>
 
-                </List>
-            </CardBody>
-        </Card>
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaTruck} color="teal.500" />
+                        <Text fontWeight="bold">Vehicle Capacity:</Text>
+                        <Text ml={2}>{selectedRoute.vehicle?.containerCapacity} ㎥</Text>
+                    </Flex>
+                </ListItem>
+
+                <ListItem>
+                    <Flex align="center">
+                        <ListIcon as={FaRoad} color="teal.500" />
+                        <Text fontWeight="bold">Vehicle On The Way:</Text>
+                        <Text ml={2} color={selectedRoute.onTheWay ? 'green.500' : 'red.500'}>
+                            {selectedRoute.onTheWay ? 'Yes' : 'No'}
+                        </Text>
+                    </Flex>
+                </ListItem>
+                <ListItem>
+                    <Flex align="start">
+                        <ListIcon as={FaMapPin} color="teal.500" />
+                        <Box>
+                            <Text fontWeight="bold">Waypoints:</Text>
+                            <OrderedList pl={4} mt={2}>
+                                {selectedRoute?.waypoints?.map((point, index) => (
+                                    <li key={index}>{point}</li>
+                                ))}
+                            </OrderedList>
+                        </Box>
+                    </Flex>
+                </ListItem>
+                
+            </List>
+        </CardBody>
+    </Card>
     )
 
     return (

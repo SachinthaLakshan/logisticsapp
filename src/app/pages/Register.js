@@ -15,7 +15,7 @@ import {
     Select
 } from "@chakra-ui/react";
 import { useState } from "react";
-import { FaUserAlt, FaLock, FaPhone, FaAddressBook } from "react-icons/fa";
+import { FaUserAlt, FaLock, FaPhone, FaAddressBook, FaBoxes } from "react-icons/fa";
 import api from "../lib/axios";
 import { useRouter } from "next/navigation";
 import { toast } from "react-toastify";
@@ -33,6 +33,7 @@ const Register = () => {
     const [companyName, setCompanyName] = useState("");
     const [businessRegistrationNumber, setBusinessRegistrationNumber] = useState("");
     const [fullName, setFullName] = useState("");
+    const [typeOfGoods, setTypeOfGoods] = useState("");
     const [fleetDetails, setFleetDetails] = useState({});
     const router = useRouter();
 
@@ -53,7 +54,8 @@ const Register = () => {
                 userType:userType,
                 contactNumber:contactNumber,
                 fullName:fullName,
-                vehicleDetails:fleetDetails
+                vehicleDetails:fleetDetails,
+                typeOfGoods:typeOfGoods
             }
             await api.post('/user/register', data);
             console.log("Registration successful");
@@ -180,6 +182,28 @@ const Register = () => {
                                     />
                                 </InputGroup>
                             </FormControl>
+                            {
+                                userType === "FarmerCustomer" && (
+                                    <FormControl>
+                                <InputGroup>
+                                    <InputLeftElement
+                                        pointerEvents="none"
+                                        children={<FaBoxes color="gray.500" />}
+                                    />
+                                    <Input
+                                        type="text"
+                                        placeholder="Type of Goods"
+                                        bg="gray.700"
+                                        borderColor="gray.600"
+                                        _placeholder={{ color: "gray.400" }}
+                                        focusBorderColor="teal.400"
+                                        value={typeOfGoods}
+                                        onChange={(e) => setTypeOfGoods(e.target.value)}
+                                    />
+                                </InputGroup>
+                            </FormControl>
+                                )
+                            }
                             {userType === "LogisticsCompany" && (
                                 <>
                                     <FormControl>
@@ -219,7 +243,7 @@ const Register = () => {
                                             />
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Height</FormLabel>
+                                            <FormLabel>Height (m)</FormLabel>
                                             <Input
                                                 type="number"
                                                 value={fleetDetails.height}
@@ -227,7 +251,7 @@ const Register = () => {
                                             />
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Length</FormLabel>
+                                            <FormLabel>Length (m)</FormLabel>
                                             <Input
                                                 type="number"
                                                 value={fleetDetails.length}
@@ -235,7 +259,7 @@ const Register = () => {
                                             />
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Width</FormLabel>
+                                            <FormLabel>Width (m)</FormLabel>
                                             <Input
                                                 type="number"
                                                 value={fleetDetails.width}
@@ -243,7 +267,7 @@ const Register = () => {
                                             />
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Container Capacity</FormLabel>
+                                            <FormLabel>Container Capacity ( m³ )</FormLabel>
                                             <Input
                                                 type="number"
                                                 value={fleetDetails.containerCapacity}
@@ -251,7 +275,7 @@ const Register = () => {
                                             />
                                         </FormControl>
                                         <FormControl>
-                                            <FormLabel>Maximum Load Capacity</FormLabel>
+                                            <FormLabel>Maximum Load Capacity (Kg)</FormLabel>
                                             <Input
                                                 type="number"
                                                 value={fleetDetails.maximumLoadCapacity}

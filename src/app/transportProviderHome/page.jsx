@@ -1,5 +1,5 @@
 'use client'
-import { Box, Button, Flex, useDisclosure } from "@chakra-ui/react";
+import { Box, Button, Flex, IconButton, Input, Tooltip, useDisclosure } from "@chakra-ui/react";
 import {
     useJsApiLoader,
     GoogleMap,
@@ -8,7 +8,7 @@ import {
 } from '@react-google-maps/api'
 import { useContext, useEffect, useState } from "react";
 import Loader from "../components/loader/loader";
-import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan, FaUsers } from "react-icons/fa";
+import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan, FaUsers, FaCheck, FaEdit } from "react-icons/fa";
 import {
 
     Card,
@@ -280,7 +280,7 @@ const Page = () => {
 
     const acceptCustomerRequest = async (req) => {
         try {
-            const response = await api.put(`customerrequest/accept/${req._id}/${req.route._id}`,{address:req.customerLocation},{address:req.customerLocation });
+            const response = await api.put(`customerrequest/accept/${req._id}/${req.route._id}`, { address: req.customerLocation }, { address: req.customerLocation });
             if (response) {
                 if (response.data) {
                     toast.success(response.data.message);
@@ -292,6 +292,29 @@ const Page = () => {
             console.error("error", error);
         }
     }
+
+    const [isEditing, setIsEditing] = useState(false);
+    const [capacity, setCapacity] = useState(user?.vehicleDetails?.containerCapacity || 0);
+
+    const handleEditClick = () => {
+        setIsEditing(!isEditing);
+    };
+
+    const handleUpdateClick = async () => {
+        // Here you can add the logic to update the capacity value in your backend or state management
+        setIsEditing(false);
+        try {
+            const response = await api.put(`direction/updatecapacity/${user?.vehicleDetails?.licensePlateNumber}/${capacity}`);
+            if (response) {
+                if (response.data) {
+                    toast.success(response.data.message);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+
+    };
 
     return (
         <div>
@@ -315,34 +338,68 @@ const Page = () => {
                     h='100vh'
                     w='100vw'
                 >{
-                        <Box
-                            p={5}
-                            bg="rgb(5, 5, 5,0.5)"
-                            borderRadius="20px"
-                            boxShadow="lg"
-                            textAlign="left"
-                            width="250px"
-                            position={'absolute'}
-                            top={'10px'}
+                        <Flex
+                            justify="center" // Center horizontally
+                            position="absolute"
+                            top="20px" // Distance from the top
+                            left="0"
+                            right="0"
                             zIndex={3}
-                            padding={4}
                         >
-                            <Grid templateColumns="1fr auto" alignItems="center">
-                                <Image
-                                    src="lorry.png"
-                                    alt="Lorry Logo"
-                                    boxSize="50px"
-                                />
-                                <Box>
-                                    <Text fontSize="medium" color="white">
-                                        Remaining Capacity
-                                    </Text>
-                                    <Text fontSize="xl" color="green.400">
-                                        <strong>{user?.vehicleDetails?.containerCapacity}%</strong>
-                                    </Text>
-                                </Box>
-                            </Grid>
-                        </Box>
+                            <Box
+                                p={4}
+                                bg="rgba(5, 5, 5, 0.7)"
+                                borderRadius="lg"
+                                boxShadow="lg"
+                                width="300px"
+                                backdropFilter="blur(10px)"
+                            >
+                                <Flex align="center" justify="space-between">
+                                    {/* Left Section: Logo and Text */}
+                                    <Flex align="center" gap={3}>
+                                        <Image
+                                            src="lorry.png"
+                                            alt="Lorry Logo"
+                                            boxSize="50px"
+                                            borderRadius="md"
+                                        />
+                                        <Box>
+                                            <Text fontSize="sm" color="gray.300" fontWeight="medium">
+                                                Remaining Capacity ( m³ )
+                                            </Text>
+                                            {isEditing ? (
+                                                <Input
+                                                    value={capacity}
+                                                    onChange={(e) => setCapacity(e.target.value)}
+                                                    size="sm"
+                                                    width="80px"
+                                                    color="white"
+                                                    placeholder="Capacity"
+                                                    _placeholder={{ color: 'gray.400' }}
+                                                    focusBorderColor="green.400"
+                                                    autoFocus
+                                                />
+                                            ) : (
+                                                <Text fontSize="xl" textAlign="center" color="green.400" fontWeight="bold">
+                                                    {capacity} m³
+                                                </Text>
+                                            )}
+                                        </Box>
+                                    </Flex>
+
+                                    {/* Right Section: Edit/Update Button */}
+                                    <Tooltip label={isEditing ? 'Update Capacity' : 'Edit Capacity'} placement="top">
+                                        <IconButton
+                                            aria-label={isEditing ? 'Update Capacity' : 'Edit Capacity'}
+                                            icon={isEditing ? <FaCheck /> : <FaEdit />}
+                                            size="sm"
+                                            colorScheme={isEditing ? 'green' : 'blue'}
+                                            onClick={isEditing ? handleUpdateClick : handleEditClick}
+                                        />
+                                    </Tooltip>
+                                </Flex>
+                            </Box>
+                        </Flex>
 
                     }
                     {bottomPopUpOpened &&
@@ -388,8 +445,11 @@ const Page = () => {
                             <CardBody >
                                 {
                                     customerRequests.length > 0 && customerRequests.map((request, index) => (
-                                        <List key={index} marginBottom={2} borderRadius={10} padding={2} border={'2px solid #b9b7b7'} display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={2}>
-                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Address : {request.customerLocation} </span> </ListItem>
+                                        <List key={index} marginBottom={2} borderRadius={10} padding={2} border={'2px solid #b9b7b7'} display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={1}>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">From Address : {request.customerLocation} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To Address : {request.toAddress} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.requestedBy.typeOfGoods} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
                                             <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Contact No :</span>{request.requestedBy.contactNumber}</ListItem>
                                             <Box display={'flex'} flexDirection={'row'}>
                                                 <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => acceptCustomerRequest(request)} color={'white'} backgroundColor={'green'} size="md" >Accept</Button>
@@ -405,7 +465,7 @@ const Page = () => {
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaEye color="white" style={{ marginRight: '5px' }} size={20} /> My Trips
                     </Button>
-                    <Button onClick={() =>customerRequests.length > 0? onCustomerPopUpOpened() : toast.error( 'No Requests Found')} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
+                    <Button onClick={() => customerRequests.length > 0 ? onCustomerPopUpOpened() : toast.error('No Requests Found')} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
                         <FaUsers color="white" style={{ marginRight: '5px' }} size={20} />
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
