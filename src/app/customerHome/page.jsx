@@ -12,7 +12,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { BounceLoader } from "react-spinners";
 import Loader from "../components/loader/loader";
 import MyComponent from "../components/map";
-import { FaCalendarAlt, FaCar, FaClock, FaFlagCheckered, FaMapMarkerAlt, FaMapPin, FaRoad, FaSearch, FaTruck } from "react-icons/fa";
+import { FaCalendarAlt, FaCar, FaClock, FaFlagCheckered, FaMapMarkerAlt, FaMapPin, FaRoad, FaSearch, FaTruck, FaUserCheck } from "react-icons/fa";
 import {
 
     Card,
@@ -46,6 +46,7 @@ const Page = () => {
     const [cookies, removeCookie] = useCookies();
     const [address, setAddress] = useState("");
     const [toAddress, setToAddress] = useState("");
+    const [typeOfGoods,setTypeOfGoods] = useState("");
     const [capacityOfGoods, setCapacityOfGoods] = useState(0); 
     const { notifications, sendNotification } = useContext(SocketContext);
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
@@ -135,6 +136,7 @@ const Page = () => {
             }
 
         } catch (err) {
+            console.error("Login failed:", err);
             toast.error(err.response.data.message);
             console.error("Login failed:", err);
         }
@@ -164,7 +166,8 @@ const Page = () => {
                 requestedTo: selectedRoute.vehicle.driver,
                 route: selectedRoute._id,
                 toAddress: toAddress,
-                capacityOfGoods: capacityOfGoods
+                capacityOfGoods: capacityOfGoods,
+                typeOfGoods: typeOfGoods
 
             }
             const response = await api.post('/customerrequest/create', data);
@@ -231,12 +234,12 @@ const Page = () => {
                     </FormControl>
                 </ListItem>
 
-                {/* <ListItem>
+                <ListItem>
                     <FormControl>
-                        <FormLabel>From Address</FormLabel>
-                        <Input placeholder="Enter from address"  />
+                        <FormLabel>Type of Goods</FormLabel>
+                        <Input value={typeOfGoods} onChange={(e)=> setTypeOfGoods(e.target.value)}  placeholder="Enter Goods type"  />
                     </FormControl>
-                </ListItem> */}
+                </ListItem>
 
                 <ListItem>
                     <FormControl>
@@ -362,6 +365,9 @@ const Page = () => {
                     }
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaSearch color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
+                    </Button>
+                    <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} right={25}>
+                        <FaUserCheck color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
