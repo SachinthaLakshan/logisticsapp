@@ -41,6 +41,8 @@ const Page = () => {
     const [tripAccepted, setTripAccepted] = useState(false);
     const [tripStarted, setTripStarted] = useState(false);
     const [bottomPopUpOpened, setBottomPopUpOpened] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [capacity, setCapacity] = useState(0);
     const [user, setUser] = useState({});
     const [cookies] = useCookies(['auth-token']);
     const { isLoaded } = useJsApiLoader({
@@ -91,6 +93,7 @@ const Page = () => {
                     setIsLoading(false);
                     setUser(response.data.data);
                     featchCustomerRequests();
+                    setCapacity(response.data.data.vehicleDetails.containerCapacity);
                 }
             }
         } catch (error) {
@@ -286,15 +289,13 @@ const Page = () => {
                     toast.success(response.data.message);
                     featchCustomerRequests();
                     setCustomerPopUpOpened(false);
+                    sendNotification(req.requestedBy._id, `${user.vehicleDetails.licensePlateNumber} :Vehicle has accepted your request|${req.route._id}`);
                 }
             }
         } catch (error) {
             console.error("error", error);
         }
     }
-
-    const [isEditing, setIsEditing] = useState(false);
-    const [capacity, setCapacity] = useState(user?.vehicleDetails?.containerCapacity || 0);
 
     const handleEditClick = () => {
         setIsEditing(!isEditing);

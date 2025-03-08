@@ -35,7 +35,11 @@ const ContextProvider = ({ children }) => {
     socket.on('notification', (data) => {
       console.log('Received Notification:', data);
       setNotifications((prev) => [...prev, data]);
-      toast.info(`📢 ${data.message}`, { position: 'top-right', autoClose: 3000 });
+      let message = data.message;
+      if (message.includes('|')) {
+        message = message.split('|')[0];
+      }
+      toast.info(`📢 ${message}`, { position: 'top-right', autoClose: 3000 });
     });
 
     return () => {
