@@ -8,7 +8,7 @@ import {
 } from '@react-google-maps/api'
 import { useContext, useEffect, useState } from "react";
 import Loader from "../components/loader/loader";
-import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan, FaUsers, FaCheck, FaEdit } from "react-icons/fa";
+import { FaEye, FaThumbsUp, FaThumbsDown, FaWindowClose, FaBan, FaUsers, FaCheck, FaEdit, FaUserCheck } from "react-icons/fa";
 import {
 
     Card,
@@ -41,6 +41,7 @@ const Page = () => {
     const [tripAccepted, setTripAccepted] = useState(false);
     const [tripStarted, setTripStarted] = useState(false);
     const [bottomPopUpOpened, setBottomPopUpOpened] = useState(false);
+    const [acceptedCustomersPopUpOpened, setAcceptedCustomersPopUpOpened] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [capacity, setCapacity] = useState(0);
     const [user, setUser] = useState({});
@@ -57,6 +58,7 @@ const Page = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [customerPopUpOpened, setCustomerPopUpOpened] = useState(false);
     const [customerRequests, setCustomerRequests] = useState([]);
+    const [acceptedCustomerRequests,setAcceptedCustomerRequests] = useState([]);
 
     useEffect(() => {
         if (navigator.geolocation) {
@@ -92,7 +94,6 @@ const Page = () => {
                 if (response.data) {
                     setIsLoading(false);
                     setUser(response.data.data);
-                    featchCustomerRequests();
                     setCapacity(response.data.data.vehicleDetails.containerCapacity);
                 }
             }
@@ -246,19 +247,47 @@ const Page = () => {
         }
     }
 
-    const onCustomerPopUpOpened = () => {
-        setCustomerPopUpOpened(!customerPopUpOpened);
-    }
-
     const featchCustomerRequests = async () => {
         const token = cookies['auth-token'];
 
         const decodedUserData = jwt.decode(token);
         try {
+            setIsLoading(true);
             const response = await api.get(`customerrequest/getcustomerrequests/${decodedUserData.userId}`);
             if (response) {
                 if (response.data) {
+                    if(response.data.length === 0){
+                    setIsLoading(false);
+                       return toast.error('No Requests Found');
+                    }
                     setCustomerRequests(response.data);
+                    setCustomerPopUpOpened(!customerPopUpOpened);
+                    setAcceptedCustomersPopUpOpened(false);
+                    setIsLoading(false);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
+    const featchAccptedCustomerRequests = async () => {
+        const token = cookies['auth-token'];
+
+        const decodedUserData = jwt.decode(token);
+        setIsLoading(true);
+        try {
+            const response = await api.get(`customerrequest/getacceptedcustomerrequests/${decodedUserData.userId}`);
+            if (response) {
+                if (response.data) {
+                    if(response.data.length === 0){
+                        setIsLoading(false);
+                       return toast.error('No Accepted Requests Found');
+                    }
+                    setAcceptedCustomerRequests(response.data);
+                    setAcceptedCustomersPopUpOpened(!acceptedCustomersPopUpOpened);
+                    setCustomerPopUpOpened(false);
+                    setIsLoading(false);
                 }
             }
         } catch (error) {
@@ -316,6 +345,14 @@ const Page = () => {
         }
 
     };
+
+    const handleAcceptedCustomerRequests = () => {
+        featchAccptedCustomerRequests();
+    }
+
+    const handleCustomerRequests = () => {
+        featchCustomerRequests();
+    }
 
     return (
         <div>
@@ -463,11 +500,38 @@ const Page = () => {
                             </CardBody>
                         </Card>
                     }
+                    {acceptedCustomersPopUpOpened &&
+                        <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
+                            <CardHeader>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md"> Accepted Customer Requests <FaWindowClose onClick={() => setAcceptedCustomersPopUpOpened(false)} style={{ marginLeft: '30px' }} /> </Heading>
+                            </CardHeader>
+                            <CardBody >
+                                {
+                                    acceptedCustomerRequests.length > 0 && acceptedCustomerRequests.map((request, index) => (
+                                        <List key={index} marginBottom={2} borderRadius={10} padding={2} border={'2px solid #b9b7b7'} display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={1}>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">From Address : {request.customerLocation} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To Address : {request.toAddress} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
+                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Contact No :</span>{request.requestedBy.contactNumber}</ListItem>
+                                            {/* <Box display={'flex'} flexDirection={'row'}>
+                                                <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaThumbsDown />} onClick={() => removeCustomerRequest(request._id)} color={'white'} backgroundColor={'red'} size="md" >Ignore</Button>
+                                            </Box> */}
+
+                                        </List>
+                                    ))
+                                }
+                            </CardBody>
+                        </Card>
+                    }
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaEye color="white" style={{ marginRight: '5px' }} size={20} /> My Trips
                     </Button>
-                    <Button onClick={() => customerRequests.length > 0 ? onCustomerPopUpOpened() : toast.error('No Requests Found')} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
+                    <Button onClick={handleCustomerRequests} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={15}>
                         <FaUsers color="white" style={{ marginRight: '5px' }} size={20} />
+                    </Button>
+                    <Button onClick={ handleAcceptedCustomerRequests } loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={'80px'}>
+                        <FaUserCheck color="white" style={{ marginRight: '5px' }} size={20} />
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}
