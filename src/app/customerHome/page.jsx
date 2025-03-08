@@ -74,6 +74,17 @@ const Page = () => {
             );
         }
     }, []);
+
+    useEffect(() => {
+        if (notifications.length > 0) {
+           
+            const notification = notifications[notifications.length - 1];
+            if(notification.message.includes('|')){
+                const routeID = notification.message.split('|')[1];
+                getRouteById(routeID);
+            }
+        }
+    }, [notifications]);
     async function calculateRoute(origin, destiantion, waypoints) {
         // if (originRef.current.value === '' || destiantionRef.current.value === '') {
         //     return
@@ -187,6 +198,25 @@ const Page = () => {
             console.error("Error fetching address:", error);
         }
     };
+
+    const getRouteById = async (routeID) => {
+        try {
+            const response = await api.get(`direction/getdirection/${routeID}`);
+            if (response) {
+                const route = response.data.data;
+                setSelectedRoute(route);
+                setIsRouteSelected(true);
+                const waypoints = route.waypoints.map((point) => {
+                    return { location: point }
+                });
+                calculateRoute(route.origin, route.destination, waypoints);
+                setCurrentLocation(route.currentLocation);
+            }
+        } catch (err) {
+            console.error("Error getting route:", err);
+            toast.error(err?.response?.data?.message);
+        }
+    }
 
     const SelectedRouteDetailsModalBody = () => (
 
