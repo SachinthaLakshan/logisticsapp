@@ -57,7 +57,7 @@ const AdminDashboardPage = () => {
 
     const removeCustomerRequest = async (id, driverId, customerId) => {
         try {
-            const response = await api.delete(`customerrequest/delete/${id}`);
+            const response = await api.delete(`customerrequest/deletebyadmin/${id}`);
             if (response) {
                 if (response.data) {
                     toast.success(response.data.message);
@@ -211,35 +211,56 @@ const AdminDashboardPage = () => {
                                         <Heading as="h3" size="sm" mb={4} color={textColor}>
                                             Customer Requests
                                         </Heading>
-                                        <VStack align="start" spacing={3}>
-                                            {selectedRoute?.customerRequests?.map((request, idx) => (
-                                                <Box key={idx} w="100%">
-                                                    <Flex align="center" justify="space-between">
-                                                        <Text fontSize="sm" color={textColor}>
-                                                            {request.customerLocation}
-                                                        </Text>
-                                                        <Badge
-                                                            colorScheme={request.driverAccepted ? "green" : "red"}
-                                                            fontSize="xs"
-                                                            px={2}
-                                                            py={1}
-                                                            borderRadius="full"
-                                                        >
-                                                            {request.driverAccepted ? "Accepted" : "Pending"}
-                                                        </Badge>
-                                                    </Flex>
-                                                    {idx < selectedRoute?.customerRequests.length - 1 && <Divider my={2} />}
-                                                </Box>
-                                            ))}
-                                        </VStack>
-                                        <Button
+                                        {selectedRoute?.customerRequests.length === 0 ? (
+                                            <Box textAlign="center" py={10}>
+                                                <Text fontSize="small" color={textColor}>
+                                                    No Customer Requests available.
+                                                </Text>
+                                            </Box>
+                                        ) :
+                                            <VStack align="start" spacing={3}>
+                                                {selectedRoute?.customerRequests?.map((request, idx) => (
+                                                    <Box key={idx} w="100%">
+                                                        <Flex align="center" justify="space-between">
+                                                            <Text fontSize="sm" color={textColor}>
+                                                                {request.customerLocation}
+                                                            </Text>
+                                                            {!request?.isExpired && <Badge
+                                                                colorScheme={request.driverAccepted ? "green" : "red"}
+                                                                fontSize="xs"
+                                                                px={2}
+                                                                py={1}
+                                                                borderRadius="full"
+                                                            >
+                                                                {request.driverAccepted ? "Accepted" : "Pending"}
+                                                            </Badge>}
+                                                            {
+                                                                request?.isExpired &&
+                                                                <Badge
+                                                                    colorScheme="purple"
+                                                                    fontSize="xs"
+                                                                    px={2}
+                                                                    py={1}
+                                                                    borderRadius="full"
+                                                                >
+                                                                    Delivered
+                                                                </Badge>
+                                                            }
+
+                                                        </Flex>
+                                                        {idx < selectedRoute?.customerRequests.length - 1 && <Divider my={2} />}
+                                                    </Box>
+                                                ))}
+                                            </VStack>
+                                        }
+                                        {selectedRoute?.customerRequests.length !== 0 && <Button
                                             mt={4}
                                             colorScheme="teal"
                                             size="sm"
                                             onClick={() => handleMoreDetailsClick(selectedRoute)}
                                         >
                                             More Details
-                                        </Button>
+                                        </Button>}
                                     </Box>
                                 </Flex>
                             </CardBody>
@@ -262,7 +283,7 @@ const AdminDashboardPage = () => {
                                         <Text fontSize="sm" color={textColor}>
                                             {request.customerLocation}
                                         </Text>
-                                        <Badge
+                                        {!request?.isExpired && <Badge
                                             colorScheme={request.driverAccepted ? "green" : "red"}
                                             fontSize="xs"
                                             px={2}
@@ -270,13 +291,30 @@ const AdminDashboardPage = () => {
                                             borderRadius="full"
                                         >
                                             {request.driverAccepted ? "Accepted" : "Pending"}
-                                        </Badge>
+                                        </Badge>}
+                                        {request?.isExpired && <Badge
+                                            colorScheme="purple"
+                                            fontSize="xs"
+                                            px={2}
+                                            py={1}
+                                            borderRadius="full"
+                                        >
+                                            Delivered
+                                        </Badge>}
                                         <Box textAlign="center">
                                             <Text fontSize="sm" fontWeight={500} color={textColor}>
                                                 Type of Goods:
                                             </Text>
                                             <Text fontSize="sm" color={textColor}>
-                                            {request.requestedBy?.typeOfGoods}
+                                                {request.requestedBy?.typeOfGoods}
+                                            </Text>
+                                        </Box>
+                                        <Box textAlign="center">
+                                            <Text fontSize="sm" fontWeight={500} color={textColor}>
+                                                Destination Contact Number:
+                                            </Text>
+                                            <Text fontSize="sm" color={textColor}>
+                                                {request?.destinationContactNumber}
                                             </Text>
                                         </Box>
                                         <Button

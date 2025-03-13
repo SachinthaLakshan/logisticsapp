@@ -80,7 +80,13 @@ const Page = () => {
         if (!isLoading) {
             findAvailableRoutes();
         }
-    }, [notifications])
+    }, [notifications]);
+
+    useEffect(() => {
+        if (Object.keys(user).length > 0) { // Check if user is not empty
+            findAvailableRoutes();
+        }
+    }, [user]);
 
     const getLogedUser = async () => {
         setIsLoading(true);
@@ -95,6 +101,7 @@ const Page = () => {
                     setIsLoading(false);
                     setUser(response.data.data);
                     setCapacity(response.data.data.vehicleDetails.containerCapacity);
+                  
                 }
             }
         } catch (error) {
@@ -158,7 +165,7 @@ const Page = () => {
     }
 
 
-    const findAvailableRoutes = async () => {
+    const findAvailableRoutes = async () => { 
         if (tripAccepted) {
             setBottomPopUpOpened(true);
             updateDriverCurrentLocation();
@@ -168,10 +175,10 @@ const Page = () => {
                 if (response) {
                     setSearching(false);
                     if (response.data) {
-                        console.log(response);
                         setAvailableRoute(response.data.data);
                         if (response.data.data.driverConfirmed) {
                             setTripAccepted(true);
+                            setTripStarted(true);
                             const waypoints = response.data.data.waypoints.map((point) => {
                                 return { location: point }
                             });
@@ -371,6 +378,26 @@ const Page = () => {
         }
     }
 
+    const markAsTripFinished = async () => {
+        
+        setIsLoading(true);
+        try {
+            const response = await api.put(`direction/finishtrip/${availableRoute._id}`);
+            if (response) {
+                if (response.data) {
+                    setIsLoading(false);
+                    toast.success(response.data.message);
+                    onClosePopup();
+                    setTripStarted(false);
+                    setDirectionsResponse(null)
+                    sendNotification(availableRoute.createdBy._id, `${availableRoute.vehicle.licensePlateNumber} has Finish the trip`);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
     return (
         <div>
             <Button
@@ -378,8 +405,8 @@ const Page = () => {
                 colorScheme="teal"
                 size="sm"
                 position={'absolute'}
-                top={0}
-                left={0}
+                top={3}
+                left={3}
                 zIndex={5}
                 onClick={handleLogout}
             >
@@ -478,6 +505,10 @@ const Page = () => {
                                                 <Button _hover={{ backgroundColor: '#b90420' }} marginLeft={5} rightIcon={<FaBan />} onClick={() => onCancelTrip()} color={'white'} backgroundColor={'red'} size="md" >Cansel</Button>
                                             </>
                                         }
+                                        {tripAccepted && tripStarted &&
+                                            <>   <Button width={200} _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => markAsTripFinished()} color={'white'} backgroundColor={'green'} size="md" >Finish Trip</Button>
+                                            </>
+                                        }
 
                                     </Box>
 
@@ -530,7 +561,7 @@ const Page = () => {
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To Address : {request.toAddress} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
-                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Contact No :</span>{request.requestedBy.contactNumber}</ListItem>
+                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Destination Contact No :</span>{request?.destinationContactNumber}</ListItem>
                                             <Box display={'flex'} flexDirection={'row'}>
                                             <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onDeliveredOrder(request)} color={'white'} backgroundColor={'green'} size="md" >Delivered</Button>
                                             </Box>

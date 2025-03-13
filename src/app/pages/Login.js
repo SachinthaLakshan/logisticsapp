@@ -103,7 +103,7 @@ const Login = () => {
                 justifyContent="center"
                 alignItems="center"
             >
-                <Avatar bg="teal.400" />
+                <Avatar src={'/company-logo.png'} width={200} height={200}/>
                 <Heading color="teal.200">Welcome</Heading>
                 <Box minW={{ base: "90%", md: "468px" }}>
                     <form>

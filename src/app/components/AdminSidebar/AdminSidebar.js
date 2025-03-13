@@ -31,7 +31,7 @@ const AdminSidebar = ({logedUser}) => {
             boxShadow="lg"
         >
             <Box padding={4} textAlign="center">
-                <Avatar name={'user name'} src={'/user.png'} size="lg" mb={2} />
+                <Avatar name={'user name'} src={'/company-logo.png'} size="lg" mb={2} />
                 <Text fontWeight="bold">@{logedUser && logedUser.fullName}</Text>
                 <Text fontSize="sm" color="gray.400">{logedUser && logedUser.email}</Text>
                 <Button 
