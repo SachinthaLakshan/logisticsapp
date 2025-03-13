@@ -48,18 +48,17 @@ const AdminDriversPage = () => {
             <Heading as="h1" size="lg" mb={4}>
                 Drivers Management
             </Heading>
-            <Box mb={4}>
+            {/* <Box mb={4}>
                 <Button colorScheme="teal" onClick={handleAddVehicle} mr={2}>
                     Page action 01
                 </Button>
-                {/* You can add more action buttons here if needed */}
                 <Button colorScheme="blue" mr={2}>
                     Page action 02
                 </Button>
                 <Button colorScheme="red">
                     Page action 03
                 </Button>
-            </Box>
+            </Box> */}
             <Table variant="striped" colorScheme="gray">
                 <Thead>
                     <Tr>

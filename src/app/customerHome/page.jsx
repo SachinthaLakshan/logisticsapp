@@ -47,6 +47,7 @@ const Page = () => {
     const [address, setAddress] = useState("");
     const [toAddress, setToAddress] = useState("");
     const [typeOfGoods,setTypeOfGoods] = useState("");
+    const [destiantionContactNumber,setDestiantionContactNumber] = useState("");
     const [capacityOfGoods, setCapacityOfGoods] = useState(0); 
     const { notifications, sendNotification } = useContext(SocketContext);
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
@@ -172,7 +173,8 @@ const Page = () => {
                 route: selectedRoute._id,
                 toAddress: toAddress,
                 capacityOfGoods: capacityOfGoods,
-                typeOfGoods: typeOfGoods
+                typeOfGoods: typeOfGoods,
+                destinationContactNumber : destiantionContactNumber
 
             }
             const response = await api.post('/customerrequest/create', data);
@@ -250,6 +252,12 @@ const Page = () => {
                     <FormControl>
                         <FormLabel>To Address</FormLabel>
                         <Input value={toAddress} onChange={(e)=> setToAddress(e.target.value)} placeholder="Enter to address" />
+                    </FormControl>
+                </ListItem>
+                <ListItem>
+                    <FormControl>
+                        <FormLabel>Destination Contact Number</FormLabel>
+                        <Input value={destiantionContactNumber} onChange={(e)=> setDestiantionContactNumber(e.target.value)} placeholder="Enter Contact Number" />
                     </FormControl>
                 </ListItem>
                 <ListItem>
@@ -334,8 +342,8 @@ const Page = () => {
                 colorScheme="teal"
                 size="sm"
                 position={'absolute'}
-                top={0}
-                left={0}
+                top={3}
+                left={3}
                 zIndex={5}
                 onClick={handleLogout}
             >
