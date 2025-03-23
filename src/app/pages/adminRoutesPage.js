@@ -31,6 +31,7 @@ import { toast } from 'react-toastify';
 import { SocketContext } from '../lib/socketContext';
 import { useCookies } from "react-cookie";
 import jwt from 'jsonwebtoken';
+import { useRouter } from 'next/navigation';
 
 const AdminRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
@@ -39,6 +40,7 @@ const AdminRoutesPage = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [selectedVehicle, setSelectedVehicle] = useState('');
     const [waypoints, setWaypoints] = useState([]);
+    const router = useRouter();
     const [route, setRoute] = useState({
         origin: "",
         destination: "",
@@ -165,7 +167,7 @@ const AdminRoutesPage = () => {
                 endDate: route.endDate,
                 lorryCapacity: route.availableSpace,
                 startTime: route.startTime,
-                createdBy:decodedUserData.userId
+                createdBy: decodedUserData.userId
 
             };
             const response = await api.post('/direction/create', data);
@@ -359,7 +361,7 @@ const AdminRoutesPage = () => {
                             <Td>
                                 {route.startDate ? route.startDate : '-'} | {route.startTime ? route.startTime : '-'}
                             </Td>
-                            <Td>{route.endDate? route.endDate: '-'}</Td>
+                            <Td>{route.endDate ? route.endDate : '-'}</Td>
                             <Td><Tooltip
                                 label={
                                     route.vehicle
@@ -376,16 +378,32 @@ const AdminRoutesPage = () => {
                             <Td style={{ color: route.driverConfirmed ? 'green' : 'red' }}>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
                             <Td style={{ color: route.onTheWay ? 'green' : 'red' }}>{route.onTheWay ? 'Yes' : 'No'}</Td>
                             <Td>{route.color}</Td>
-                            <Td>
+                            <Td display={"flex"} flexDirection={"column"} alignItems={"center"}>
                                 <Button
+                                    size="sm"
+                                    width={"100%"}
                                     colorScheme="yellow"
                                     onClick={() => { assignVehicleModalOnOpen(); setSelectedRoute(route); }}
-                                    mr={2}
+                                    marginBottom={1}
                                 >
                                     Assign Vehicle
                                 </Button>
+                                {route.onTheWay && 
+                                    <Button
+                                        size={"sm"}
+                                        width={"100%"}
+                                        colorScheme="blue"
+                                        marginBottom={1}
+                                        onClick={() => router.push(`/companyHome/mapPage/${route._id}`)}
+                                    >
+                                        See on Map
+                                    </Button>
+                                }
                                 <Button
+                                    size={"sm"}
+                                    width={"100%"}
                                     colorScheme="red"
+                                    marginBottom={1}
                                     onClick={() => handleDeleteRoute(route._id)}
                                 >
                                     Delete
