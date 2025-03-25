@@ -276,62 +276,92 @@ const AdminDashboardPage = () => {
                     <ModalHeader>Customer Requests</ModalHeader>
                     <ModalCloseButton />
                     <ModalBody>
-                        <VStack align="start" spacing={4}>
+                        <VStack spacing={4} align="stretch">
                             {selectedRoute?.customerRequests?.map((request, idx) => (
-                                <Box key={idx} w="100%">
-                                    <Flex align="center" justify="space-between">
-                                        <Text fontSize="sm" color={textColor}>
-                                            {request.customerLocation}
-                                        </Text>
-                                        {!request?.isExpired && <Badge
-                                            colorScheme={request.driverAccepted ? "green" : "red"}
-                                            fontSize="xs"
-                                            px={2}
-                                            py={1}
-                                            borderRadius="full"
-                                        >
-                                            {request.driverAccepted ? "Accepted" : "Pending"}
-                                        </Badge>}
-                                        {request?.isExpired && <Badge
-                                            colorScheme="purple"
-                                            fontSize="xs"
-                                            px={2}
-                                            py={1}
-                                            borderRadius="full"
-                                        >
-                                            Delivered
-                                        </Badge>}
-                                        <Box textAlign="center">
-                                            <Text fontSize="sm" fontWeight={500} color={textColor}>
-                                                Type of Goods:
-                                            </Text>
-                                            <Text fontSize="sm" color={textColor}>
-                                                {request.requestedBy?.typeOfGoods}
-                                            </Text>
+                                <Box key={idx} borderWidth="1px" borderRadius="lg" p={4} boxShadow="sm">
+                                    <Grid templateColumns="repeat(3, 1fr) auto" gap={4} alignItems="start">
+                                        {/* Column 1: Location Details */}
+                                        <Box gridColumn="1 / 2">
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                                                    📍 Location
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.600">
+                                                    {request.customerLocation}
+                                                </Text>
+                                            </VStack>
                                         </Box>
-                                        <Box textAlign="center">
-                                            <Text fontSize="sm" fontWeight={500} color={textColor}>
-                                                Destination Contact Number:
-                                            </Text>
-                                            <Text fontSize="sm" color={textColor}>
-                                                {request?.destinationContactNumber}
-                                            </Text>
+
+                                        {/* Column 2: Goods Details */}
+                                        <Box gridColumn="2 / 3">
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                                                    🚚 Goods Type
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.600">
+                                                    {request.requestedBy?.typeOfGoods}
+                                                </Text>
+                                            </VStack>
                                         </Box>
-                                        <Button
-                                            colorScheme="red"
-                                            size="sm"
-                                            onClick={() => removeCustomerRequest(request._id, selectedRoute?.vehicle?.driver, request?.requestedBy._id)}
-                                        >
-                                            Remove
-                                        </Button>
-                                    </Flex>
-                                    {idx < selectedRoute?.customerRequests.length - 1 && <Divider my={2} />}
+
+                                        {/* Column 3: Contact Details */}
+                                        <Box gridColumn="3 / 4">
+                                            <VStack align="start" spacing={1}>
+                                                <Text fontSize="sm" fontWeight="semibold" color="gray.700">
+                                                    📞 Contact (Customer)
+                                                </Text>
+                                                <Text fontSize="sm" color="gray.600">
+                                                    {request.requestedBy?.contactNumber}
+                                                </Text>
+                                            </VStack>
+                                        </Box>
+
+                                        {/* Status and Actions */}
+                                        <Box gridColumn="4 / 5">
+                                            <VStack align="end" spacing={2}>
+                                                {!request?.isExpired && (
+                                                    <Badge
+                                                        colorScheme={request.driverAccepted ? "green" : "orange"}
+                                                        variant="subtle"
+                                                        px={2}
+                                                        py={1}
+                                                        borderRadius="md"
+                                                        fontSize="xs"
+                                                        textTransform="uppercase"
+                                                    >
+                                                        {request.driverAccepted ? "Accepted" : "Pending"}
+                                                    </Badge>
+                                                )}
+                                                {request?.isExpired && (
+                                                    <Badge
+                                                        colorScheme="purple"
+                                                        variant="subtle"
+                                                        px={2}
+                                                        py={1}
+                                                        borderRadius="md"
+                                                        fontSize="xs"
+                                                        textTransform="uppercase"
+                                                    >
+                                                        Delivered
+                                                    </Badge>
+                                                )}
+                                                <Button
+                                                    colorScheme="red"
+                                                    size="xs"
+                                                    variant="outline"
+                                                    onClick={() => removeCustomerRequest(request._id, selectedRoute?.vehicle?.driver, request?.requestedBy._id)}
+                                                >
+                                                    Remove
+                                                </Button>
+                                            </VStack>
+                                        </Box>
+                                    </Grid>
                                 </Box>
                             ))}
                         </VStack>
                     </ModalBody>
                     <ModalFooter>
-                        <Button colorScheme="blue" mr={3} onClick={onClose}>
+                        <Button colorScheme="blue" size="sm" onClick={onClose}>
                             Close
                         </Button>
                     </ModalFooter>

@@ -12,7 +12,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { BounceLoader } from "react-spinners";
 import Loader from "../components/loader/loader";
 import MyComponent from "../components/map";
-import { FaCalendarAlt, FaCar, FaClock, FaFlagCheckered, FaMapMarkerAlt, FaMapPin, FaRoad, FaSearch, FaTruck, FaUserCheck } from "react-icons/fa";
+import { FaCalendarAlt, FaCar, FaClock, FaDumpster, FaFlagCheckered, FaMapMarkerAlt, FaMapPin, FaRoad, FaSearch, FaThumbsUp, FaTruck, FaUserCheck, FaWindowClose } from "react-icons/fa";
 import {
 
     Card,
@@ -46,9 +46,11 @@ const Page = () => {
     const [cookies, removeCookie] = useCookies();
     const [address, setAddress] = useState("");
     const [toAddress, setToAddress] = useState("");
-    const [typeOfGoods,setTypeOfGoods] = useState("");
-    const [destiantionContactNumber,setDestiantionContactNumber] = useState("");
-    const [capacityOfGoods, setCapacityOfGoods] = useState(0); 
+    const [typeOfGoods, setTypeOfGoods] = useState("");
+    const [destiantionContactNumber, setDestiantionContactNumber] = useState("");
+    const [capacityOfGoods, setCapacityOfGoods] = useState(0);
+    const [myRequestsPopUpOpened, setMyRequestsPopUpOpened] = useState(false);
+    const [myRequests, setMyRequests] = useState([]);
     const { notifications, sendNotification } = useContext(SocketContext);
     const { isOpen: assignVehicleModalIsOpen, onOpen: assignVehicleModalOnOpen, onClose: assignVehicleModalOnClose } = useDisclosure();
     const { isLoaded } = useJsApiLoader({
@@ -70,7 +72,7 @@ const Page = () => {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude,
                     });
-                    getAddressFromCoords(position.coords.latitude,position.coords.longitude);
+                    getAddressFromCoords(position.coords.latitude, position.coords.longitude);
                 },
                 (error) => console.error("Error getting location:", error)
             );
@@ -79,14 +81,14 @@ const Page = () => {
 
     useEffect(() => {
         if (notifications.length > 0) {
-           
+
             const notification = notifications[notifications.length - 1];
-            if(notification.message.includes('Your goods have delivered successfully')){
+            if (notification.message.includes('Your goods have delivered successfully')) {
                 setCurrentLocation(null);
                 setSearched(false);
                 setDirectionsResponse(null);
             }
-            if(notification.message.includes('|')){
+            if (notification.message.includes('|')) {
                 const routeID = notification.message.split('|')[1];
                 getRouteById(routeID);
             }
@@ -156,11 +158,11 @@ const Page = () => {
     const makeCustomerRequest = async () => {
         const token = cookies['auth-token'];
         const decodedUserData = jwt.decode(token);
-        if(toAddress == '' ){
+        if (toAddress == '') {
             toast.error('To address is required!');
             return;
         }
-        if(capacityOfGoods == 0 ){
+        if (capacityOfGoods == 0) {
             toast.error('Capacity of goods is required!');
             return;
         }
@@ -174,11 +176,11 @@ const Page = () => {
                 toAddress: toAddress,
                 capacityOfGoods: capacityOfGoods,
                 typeOfGoods: typeOfGoods,
-                destinationContactNumber : destiantionContactNumber
+                destinationContactNumber: destiantionContactNumber
 
             }
             const response = await api.post('/customerrequest/create', data);
-            if(response){
+            if (response) {
                 toast.success('Request sent successfully!');
                 assignVehicleModalOnClose();
                 sendNotification(selectedRoute.vehicle.driver, `You have a new customer request!`);
@@ -190,7 +192,7 @@ const Page = () => {
     }
 
     const getAddressFromCoords = async (lat, lng) => {
-       
+
         const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process?.env?.NEXT_PUBLIC_API_KEY}`;
 
         try {
@@ -200,7 +202,7 @@ const Page = () => {
             if (data.status === "OK") {
                 const formattedAddress = data.results[0].formatted_address;
                 setAddress(formattedAddress);
-                
+
             } else {
                 console.error("Geocoding error:", data.status);
             }
@@ -228,112 +230,149 @@ const Page = () => {
         }
     }
 
+    const featchMyCustomerRequests = async () => {
+        const token = cookies['auth-token'];
+
+        const decodedUserData = jwt.decode(token);
+        //setI(true);
+        try {
+            const response = await api.get(`customerrequest/getmycustomerrequests/${decodedUserData.userId}`);
+            if (response) {
+                if (response.data) {
+                    if (response.data.length === 0) {
+                        setMyRequestsPopUpOpened(false);
+                        return toast.error('No Requests Found');
+                    }
+                    setMyRequests(response.data);
+                    setMyRequestsPopUpOpened(true);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    }
+
+    const removeCustomerRequest = async (id, driverId) => {
+        try {
+            const response = await api.delete(`customerrequest/deletebyadmin/${id}`);
+            if (response) {
+                if (response.data) {
+                    toast.success(response.data.message);
+                    featchMyCustomerRequests();
+                    sendNotification(driverId, `Customer Request has been removed by Customer`);
+                }
+            }
+        } catch (error) {
+            console.error("error", error);
+        }
+    };
+
     const SelectedRouteDetailsModalBody = () => (
 
-        <Card maxW="md"  borderRadius="lg" overflow="scroll" overflowX="unset" minHeight={"300px"} maxHeight={"300px"}>
-        <CardBody>
-            <List spacing={3}>
-                {/* Input fields for Capacity of Goods, From Address, and To Address */}
-                <ListItem>
-                    <FormControl>
-                        <FormLabel>Capacity of Goods ( ㎥ )</FormLabel>
-                        <Input value={capacityOfGoods} onChange={(e)=> setCapacityOfGoods(e.target.value)} placeholder="Enter capacity of goods" type="number" />
-                    </FormControl>
-                </ListItem>
+        <Card maxW="md" borderRadius="lg" overflow="scroll" overflowX="unset" minHeight={"300px"} maxHeight={"300px"}>
+            <CardBody>
+                <List spacing={3}>
+                    {/* Input fields for Capacity of Goods, From Address, and To Address */}
+                    <ListItem>
+                        <FormControl>
+                            <FormLabel>Capacity of Goods ( ㎥ )</FormLabel>
+                            <Input value={capacityOfGoods} onChange={(e) => setCapacityOfGoods(e.target.value)} placeholder="Enter capacity of goods" type="number" />
+                        </FormControl>
+                    </ListItem>
 
-                <ListItem>
-                    <FormControl>
-                        <FormLabel>Type of Goods</FormLabel>
-                        <Input value={typeOfGoods} onChange={(e)=> setTypeOfGoods(e.target.value)}  placeholder="Enter Goods type"  />
-                    </FormControl>
-                </ListItem>
+                    <ListItem>
+                        <FormControl>
+                            <FormLabel>Type of Goods</FormLabel>
+                            <Input value={typeOfGoods} onChange={(e) => setTypeOfGoods(e.target.value)} placeholder="Enter Goods type" />
+                        </FormControl>
+                    </ListItem>
 
-                <ListItem>
-                    <FormControl>
-                        <FormLabel>To Address</FormLabel>
-                        <Input value={toAddress} onChange={(e)=> setToAddress(e.target.value)} placeholder="Enter to address" />
-                    </FormControl>
-                </ListItem>
-                <ListItem>
-                    <FormControl>
-                        <FormLabel>Destination Contact Number</FormLabel>
-                        <Input value={destiantionContactNumber} onChange={(e)=> setDestiantionContactNumber(e.target.value)} placeholder="Enter Contact Number" />
-                    </FormControl>
-                </ListItem>
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaMapMarkerAlt} color="teal.500" />
-                        <Text fontWeight="bold">Start:</Text>
-                        <Text ml={2}>{selectedRoute.origin}</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <FormControl>
+                            <FormLabel>To Address</FormLabel>
+                            <Input value={toAddress} onChange={(e) => setToAddress(e.target.value)} placeholder="Enter to address" />
+                        </FormControl>
+                    </ListItem>
+                    <ListItem>
+                        <FormControl>
+                            <FormLabel>Destination Contact Number</FormLabel>
+                            <Input value={destiantionContactNumber} onChange={(e) => setDestiantionContactNumber(e.target.value)} placeholder="Enter Contact Number" />
+                        </FormControl>
+                    </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaMapMarkerAlt} color="teal.500" />
+                            <Text fontWeight="bold">Start:</Text>
+                            <Text ml={2}>{selectedRoute.origin}</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaFlagCheckered} color="teal.500" />
-                        <Text fontWeight="bold">End:</Text>
-                        <Text ml={2}>{selectedRoute.destination}</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaFlagCheckered} color="teal.500" />
+                            <Text fontWeight="bold">End:</Text>
+                            <Text ml={2}>{selectedRoute.destination}</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaCalendarAlt} color="teal.500" />
-                        <Text fontWeight="bold">Start Date:</Text>
-                        <Text ml={2}>{selectedRoute.startDate}</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaCalendarAlt} color="teal.500" />
+                            <Text fontWeight="bold">Start Date:</Text>
+                            <Text ml={2}>{selectedRoute.startDate}</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaClock} color="teal.500" />
-                        <Text fontWeight="bold">Start Time:</Text>
-                        <Text ml={2}>{selectedRoute.startTime}</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaClock} color="teal.500" />
+                            <Text fontWeight="bold">Start Time:</Text>
+                            <Text ml={2}>{selectedRoute.startTime}</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaCar} color="teal.500" />
-                        <Text fontWeight="bold">Vehicle No:</Text>
-                        <Text ml={2}>{selectedRoute.vehicle?.licensePlateNumber}</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaCar} color="teal.500" />
+                            <Text fontWeight="bold">Vehicle No:</Text>
+                            <Text ml={2}>{selectedRoute.vehicle?.licensePlateNumber}</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaTruck} color="teal.500" />
-                        <Text fontWeight="bold">Vehicle Capacity:</Text>
-                        <Text ml={2}>{selectedRoute.vehicle?.containerCapacity} ㎥</Text>
-                    </Flex>
-                </ListItem>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaTruck} color="teal.500" />
+                            <Text fontWeight="bold">Vehicle Capacity:</Text>
+                            <Text ml={2}>{selectedRoute.vehicle?.containerCapacity} ㎥</Text>
+                        </Flex>
+                    </ListItem>
 
-                <ListItem>
-                    <Flex align="center">
-                        <ListIcon as={FaRoad} color="teal.500" />
-                        <Text fontWeight="bold">Vehicle On The Way:</Text>
-                        <Text ml={2} color={selectedRoute.onTheWay ? 'green.500' : 'red.500'}>
-                            {selectedRoute.onTheWay ? 'Yes' : 'No'}
-                        </Text>
-                    </Flex>
-                </ListItem>
-                <ListItem>
-                    <Flex align="start">
-                        <ListIcon as={FaMapPin} color="teal.500" />
-                        <Box>
-                            <Text fontWeight="bold">Waypoints:</Text>
-                            <OrderedList pl={4} mt={2}>
-                                {selectedRoute?.waypoints?.map((point, index) => (
-                                    <li key={index}>{point}</li>
-                                ))}
-                            </OrderedList>
-                        </Box>
-                    </Flex>
-                </ListItem>
-                
-            </List>
-        </CardBody>
-    </Card>
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaRoad} color="teal.500" />
+                            <Text fontWeight="bold">Vehicle On The Way:</Text>
+                            <Text ml={2} color={selectedRoute.onTheWay ? 'green.500' : 'red.500'}>
+                                {selectedRoute.onTheWay ? 'Yes' : 'No'}
+                            </Text>
+                        </Flex>
+                    </ListItem>
+                    <ListItem>
+                        <Flex align="start">
+                            <ListIcon as={FaMapPin} color="teal.500" />
+                            <Box>
+                                <Text fontWeight="bold">Waypoints:</Text>
+                                <OrderedList pl={4} mt={2}>
+                                    {selectedRoute?.waypoints?.map((point, index) => (
+                                        <li key={index}>{point}</li>
+                                    ))}
+                                </OrderedList>
+                            </Box>
+                        </Flex>
+                    </ListItem>
+
+                </List>
+            </CardBody>
+        </Card>
     )
 
     return (
@@ -376,8 +415,68 @@ const Page = () => {
                             </CardFooter>
                         </Card>
                     }
+                    {myRequestsPopUpOpened &&
+                        <Card bg={cardBg} width={'90%'} borderRadius="md" boxShadow="lg" position={'absolute'} bottom={'68px'} zIndex={3}>
+                            <CardHeader>
+                                <Heading display={'flex'} justifyContent={'center'} alignItems={'center'} flexDirection={'row'} color={'white'} size="md"> My Requests <FaWindowClose onClick={() => setMyRequestsPopUpOpened(false)} style={{ marginLeft: '30px' }} /> </Heading>
+                            </CardHeader>
+                            <CardBody >
+                                {
+                                    myRequests.length > 0 && myRequests.map((request, index) => (
+                                        <List key={index} marginBottom={2} borderRadius={10} padding={2} border={'2px solid #b9b7b7'} display={'flex'} flexDirection={'column'} alignItems={'center'} justifyContent={'center'} spacing={1}>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">From Address : {request.customerLocation} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To Address : {request.toAddress} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
+                                            <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
+                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Driver Contact No :</span>{request?.requestedTo?.contactNumber}</ListItem>
+                                            <ListItem display="flex" alignItems={"center"} flexDirection={"column"} color={'whiteAlpha.900'} width="full">
+                                                <span style={{ color: '#b9b7b7' }} className="font-bold mr-2">Waypoints :</span>
+                                                <Box
+                                                    display="flex"
+                                                    flexWrap="wrap"
+                                                    alignItems={"center"}
+                                                    justifyContent={"center"}
+                                                    gap={2}
+                                                    mt={1}
+                                                    fontSize={10}
+                                                    width="full"
+                                                    marginBottom={2}
+                                                >
+                                                    {request?.route?.waypoints?.map((waypoint, wpIndex) => (
+                                                        <Box
+                                                            key={wpIndex}
+                                                            border="1px solid #b9b7b7"
+                                                            borderRadius="md"
+                                                            px={2}
+                                                            py={1}
+                                                            display="flex"
+                                                            alignItems="center"
+                                                            color="whiteAlpha.900"
+                                                        >
+                                                            <Text mr={1}>•</Text>
+                                                            {waypoint}
+                                                        </Box>
+                                                    ))}
+                                                    {!request?.route?.waypoints?.length && (
+                                                        <Text color="whiteAlpha.900" fontSize={10}>None</Text>
+                                                    )}
+                                                </Box>
+                                            </ListItem>
+                                            <Box display={'flex'} flexDirection={'row'}>
+                                                <Button _hover={{ backgroundColor: 'red' }} rightIcon={<FaDumpster />} onClick={() => removeCustomerRequest(request._id, request.requestedTo._id)} color={'white'} backgroundColor={'red'} size="md" >Remove</Button>
+                                            </Box>
+
+                                        </List>
+                                    ))
+                                }
+                            </CardBody>
+                        </Card>
+                    }
                     <Button onClick={() => findAvailableRoutes()} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5}>
                         <FaSearch color="white" style={{ marginRight: '5px' }} size={20} /> Search a Lorry
+                    </Button>
+                    <Button onClick={featchMyCustomerRequests} loading={true} loadingText="Searching..." borderRadius={20} _hover={{ backgroundColor: '#2C7A7B' }} color={'white'} position={'absolute'} zIndex={2} backgroundColor={'#0D9488'} variant="solid" bottom={5} left={'80px'}>
+                        <FaUserCheck color="white" style={{ marginRight: '5px' }} size={20} />
                     </Button>
                     <Box left={0} top={0} h='100%' w='100%'>
                         {/* Google Map Box */}

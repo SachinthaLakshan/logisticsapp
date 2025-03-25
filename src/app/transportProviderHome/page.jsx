@@ -561,6 +561,7 @@ const Page = () => {
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">To Address : {request.toAddress} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
+                                            <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Cutomer Contact No :</span>{request?.requestedBy?.contactNumber}</ListItem>
                                             <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Destination Contact No :</span>{request?.destinationContactNumber}</ListItem>
                                             <Box display={'flex'} flexDirection={'row'}>
                                             <Button _hover={{ backgroundColor: '#0b6a35' }} rightIcon={<FaThumbsUp />} onClick={() => onDeliveredOrder(request)} color={'white'} backgroundColor={'green'} size="md" >Delivered</Button>
