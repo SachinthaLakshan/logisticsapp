@@ -88,6 +88,12 @@ const Page = () => {
         }
     }, [user]);
 
+    useEffect(()=>{
+        if(isLoaded){
+            updateDriverCurrentLocation();
+        }
+    },[currentLocation])
+
     const getLogedUser = async () => {
         setIsLoading(true);
         const token = cookies['auth-token'];
