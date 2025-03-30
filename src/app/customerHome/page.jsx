@@ -435,7 +435,7 @@ const Page = () => {
                                                     {/* <Badge>Default</Badge> */}
                                                     {request.driverAccepted && !request.isExpired && <Badge height={'19px'} colorScheme='green'>Driver Accepted</Badge>}
                                                     {!request.driverAccepted && !request.isExpired && <Badge height={'19px'} colorScheme='red'>Waiting For Driver Response</Badge>}
-                                                    {request.isExpired && <Badge height={'19px'} colorScheme='purple'>New</Badge>}
+                                                    {request.isExpired && <Badge height={'19px'} colorScheme='purple'>Delivered</Badge>}
                                                 </Stack>
                                             </ListItem>
                                             <ListItem display="flex" alignItems={"center"} flexDirection={"column"} color={'whiteAlpha.900'} width="full">
