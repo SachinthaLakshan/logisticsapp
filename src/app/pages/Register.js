@@ -39,7 +39,7 @@ const Register = () => {
 
     const handleFleetDetailChange = (field, value) => {
         const updatedFleetDetails = { ...fleetDetails };
-        updatedFleetDetails[field] = value;
+        updatedFleetDetails[field] = field === 'licensePlateNumber' ? value.replace(/\s/g, '') : value;
         setFleetDetails(updatedFleetDetails);
     };
 
