@@ -1,5 +1,5 @@
 'use client'
-import { Box, Button, Flex, FormControl, FormLabel, Input, ListIcon, OrderedList, useDisclosure, } from "@chakra-ui/react";
+import { Badge, Box, Button, Flex, FormControl, FormLabel, Input, ListIcon, OrderedList, Stack, useDisclosure, } from "@chakra-ui/react";
 import { useRouter } from "next/navigation";
 import {
     useJsApiLoader,
@@ -429,6 +429,15 @@ const Page = () => {
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Type of Goods : {request.typeOfGoods} </span> </ListItem>
                                             <ListItem fontSize={10} color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2 ml-2">Capacity of Goods : {request.capacityOfGoods} m³</span> </ListItem>
                                             <ListItem color={'whiteAlpha.900'}><span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Driver Contact No :</span>{request?.requestedTo?.contactNumber}</ListItem>
+                                            <ListItem color={'whiteAlpha.900'}>
+                                                <Stack direction='row'>
+                                                <span style={{ color: '#b9b7b7 ' }} className="font-bold mr-2">Driver Status :</span>
+                                                    {/* <Badge>Default</Badge> */}
+                                                    {request.driverAccepted && !request.isExpired && <Badge height={'19px'} colorScheme='green'>Driver Accepted</Badge>}
+                                                    {!request.driverAccepted && !request.isExpired && <Badge height={'19px'} colorScheme='red'>Waiting For Driver Response</Badge>}
+                                                    {request.isExpired && <Badge height={'19px'} colorScheme='purple'>New</Badge>}
+                                                </Stack>
+                                            </ListItem>
                                             <ListItem display="flex" alignItems={"center"} flexDirection={"column"} color={'whiteAlpha.900'} width="full">
                                                 <span style={{ color: '#b9b7b7' }} className="font-bold mr-2">Waypoints :</span>
                                                 <Box

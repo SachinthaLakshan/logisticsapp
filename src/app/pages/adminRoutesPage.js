@@ -351,6 +351,7 @@ const AdminRoutesPage = () => {
                         <Th>Assigned Vehicle</Th>
                         <Th>Driver Confirmed</Th>
                         <Th>Vehicle On The Way</Th>
+                        <Th>Trip Finished</Th>
                     </Tr>
                 </Thead>
                 <Tbody>
@@ -377,7 +378,8 @@ const AdminRoutesPage = () => {
                             </Tooltip></Td>
                             <Td style={{ color: route.driverConfirmed ? 'green' : 'red' }}>{route.driverConfirmed ? 'Yes' : 'No'}</Td>
                             <Td style={{ color: route.onTheWay ? 'green' : 'red' }}>{route.onTheWay ? 'Yes' : 'No'}</Td>
-                            <Td>{route.color}</Td>
+                            <Td style={{ color: route.tripFinished ? 'green' : 'red' }}>{route.tripFinished ? 'Yes' : 'No'}</Td>
+                            {/* <Td>{route.color}</Td> */}
                             <Td display={"flex"} flexDirection={"column"} alignItems={"center"}>
                                 <Button
                                     size="sm"
