@@ -343,6 +343,14 @@ const Page = () => {
                         <Flex align="center">
                             <ListIcon as={FaTruck} color="teal.500" />
                             <Text fontWeight="bold">Vehicle Capacity:</Text>
+                            <Text ml={2}>{selectedRoute.vehicle?.maximumLoadCapacity} ㎥</Text>
+                        </Flex>
+                    </ListItem>
+
+                    <ListItem>
+                        <Flex align="center">
+                            <ListIcon as={FaTruck} color="teal.500" />
+                            <Text fontWeight="bold">Available Capacity:</Text>
                             <Text ml={2}>{selectedRoute.vehicle?.containerCapacity} ㎥</Text>
                         </Flex>
                     </ListItem>
