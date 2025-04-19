@@ -62,8 +62,8 @@ const AdminVehiclesPage = () => {
                 <Thead>
                     <Tr>
                         <Th>Number</Th>
-                        <Th>Current Capacity</Th>
-                        <Th>Max Capacity</Th>
+                        <Th>Current Capacity (m³)</Th>
+                        <Th>Max Capacity (m³)</Th>
                         <Th>Vehicle Type</Th>
                         <Th>Container Dimensions (m)</Th>
                     </Tr>
@@ -73,7 +73,7 @@ const AdminVehiclesPage = () => {
                         <Tr key={vehicle._id}>
                             <Td>{vehicle.licensePlateNumber}</Td>
                             <Td>{vehicle.containerCapacity}</Td>
-                            <Td>{vehicle.maximumLoadCapacity}</Td>
+                            <Td>{(vehicle.width * vehicle.height * vehicle.length).toFixed(2)}</Td>
                             <Td>{vehicle.vehicleType}</Td>
                             <Td>{vehicle.width} x {vehicle.height} x {vehicle.length}</Td>
                             <Td>
